@@ -65,7 +65,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // 2. Booking Form Tabs Handling
+  // 2. Booking Form Tabs Handling (Local Rides, Oneway, Outstation, Hourly Package)
   const tabLinks = document.querySelectorAll('.tab-link');
   const tabPanels = document.querySelectorAll('.tab-content-panel');
 
@@ -155,6 +155,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const normDrop = String(destName).toLowerCase().trim();
     const normPickup = String(pickupName).toLowerCase().trim();
     
+    // Check fixed tariff dictionary match
     for (let key in FIXED_ONEWAY_RATES) {
       if (normDrop.includes(key) || normPickup.includes(key)) {
         return FIXED_ONEWAY_RATES[key];
@@ -185,11 +186,12 @@ document.addEventListener('DOMContentLoaded', function () {
     return hrs * 350;
   }
 
+  // Update all estimate displays in the booking tabs
   function updateAllEstimates() {
     // 1. Local Ride Engine with API Fallback
     const localDistInput = document.getElementById('local-distance');
     let localDist = localDistInput ? parseFloat(localDistInput.value) : window.currentLocalDistanceKm;
-    if (!localDist || isNaN(localDist) || localDist <= 0) localDist = 12; // Fallback
+    if (!localDist || isNaN(localDist) || localDist <= 0) localDist = 12; // Base fallback of 12 KM if API unverified
     
     const localPickup = document.getElementById('local-pickup')?.value || '';
     const localDrop = document.getElementById('local-drop')?.value || '';
@@ -252,6 +254,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   window.updateAllEstimates = updateAllEstimates; // Expose globally for Google Maps API
 
+  // Auto-sync distance when user selects a preset destination in Oneway
   const onewayDestSelect = document.getElementById('oneway-dest-select');
   const onewayDistInput = document.getElementById('oneway-distance');
   if (onewayDestSelect && onewayDistInput) {
@@ -265,6 +268,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
+  // Attach dynamic input event listeners for live price updates & auto hill detection
   const calcInputs = [
     'local-cab-type',
     'oneway-pickup', 'oneway-distance', 'oneway-dest-select', 'oneway-cab-type',
@@ -283,7 +287,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   updateAllEstimates();
 
-  // 4. Booking Submission & Modal Popup (WITH WHATSAPP INTEGRATION)
+  // 4. Booking Submission & Modal Popup
   const forms = [
     { id: 'form-local', type: 'Local Ride' },
     { id: 'form-oneway', type: 'Oneway Ride' },
@@ -301,6 +305,7 @@ document.addEventListener('DOMContentLoaded', function () {
       formEl.addEventListener('submit', function (e) {
         e.preventDefault();
 
+        // Extract values dynamically
         let pickup = formEl.querySelector('[data-field="pickup"]')?.value || 'Coimbatore Gandhipuram';
         let drop = formEl.querySelector('[data-field="drop"]')?.value || 'Coimbatore Airport CJB';
         let date = formEl.querySelector('[data-field="date"]')?.value || 'Today';
@@ -329,14 +334,19 @@ document.addEventListener('DOMContentLoaded', function () {
           `;
         }
 
-        // Setup WhatsApp URL for the Close button
-        if (modalCloseBtn) {
-          const waMessage = `*New Get Cabs Booking!*%0A%0A*Type:* ${item.type}%0A*Pickup:* ${pickup}%0A*Drop:* ${drop}%0A*Date & Time:* ${date} at ${time}%0A*Customer Phone:* ${phone}%0A*Estimated Fare:* ${fare}`;
-          modalCloseBtn.setAttribute('data-wa-url', `https://wa.me/919894020156?text=${waMessage}`);
-          modalCloseBtn.textContent = 'Confirm & Send via WhatsApp'; // Update button text for better UX
-        }
+        const waMessage = `*New Get Cabs Booking!*%0A%0A*Type:* ${item.type}%0A*Pickup:* ${pickup}%0A*Drop:* ${drop}%0A*Date & Time:* ${date} at ${time}%0A*Customer Phone:* ${phone}%0A*Estimated Fare:* ${fare}`;
+        const waUrl = `https://wa.me/919894020156?text=${waMessage}`;
 
         if (modalOverlay) {
+          const redBottomBtn = modalOverlay.querySelector('.btn-red, button'); 
+          if (redBottomBtn) {
+            redBottomBtn.textContent = 'Confirm & Send via WhatsApp';
+            redBottomBtn.onclick = function(event) {
+              event.preventDefault();
+              window.open(waUrl, '_blank');
+              modalOverlay.classList.remove('active');
+            };
+          }
           modalOverlay.classList.add('active');
         }
       });
@@ -344,11 +354,7 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 
   if (modalCloseBtn && modalOverlay) {
-    modalCloseBtn.addEventListener('click', () => {
-      const waUrl = modalCloseBtn.getAttribute('data-wa-url');
-      if (waUrl) window.open(waUrl, '_blank');
-      modalOverlay.classList.remove('active');
-    });
+    modalCloseBtn.addEventListener('click', () => modalOverlay.classList.remove('active'));
     modalOverlay.addEventListener('click', (e) => {
       if (e.target === modalOverlay) modalOverlay.classList.remove('active');
     });
@@ -398,12 +404,14 @@ document.addEventListener('DOMContentLoaded', function () {
       rootMargin: '0px 0px -40px 0px',
       threshold: 0.1
     });
+
     revealElements.forEach(el => revealObserver.observe(el));
   } else {
+    // Fallback if IntersectionObserver is not supported
     revealElements.forEach(el => el.classList.add('revealed'));
   }
 
-  // 8. Dynamic Ambient Highway Motion Engine
+  // 8. Dynamic Ambient Highway Motion Engine (Canvas Fallback & Backdrop)
   const heroCanvas = document.getElementById('hero-canvas');
   if (heroCanvas) {
     const ctx = heroCanvas.getContext('2d');
@@ -417,6 +425,7 @@ document.addEventListener('DOMContentLoaded', function () {
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
+    // Highway streaks particles
     const streaks = [];
     const numStreaks = 45;
     for (let i = 0; i < numStreaks; i++) {
@@ -433,14 +442,20 @@ document.addEventListener('DOMContentLoaded', function () {
     function renderHighway() {
       if (!ctx || width === 0) return;
       ctx.clearRect(0, 0, width, height);
+
+      // Deep night sky background
       const skyGrad = ctx.createLinearGradient(0, 0, 0, height);
       skyGrad.addColorStop(0, '#0b1329');
       skyGrad.addColorStop(0.5, '#111827');
       skyGrad.addColorStop(1, '#080d1a');
       ctx.fillStyle = skyGrad;
       ctx.fillRect(0, 0, width, height);
+
+      // Vanishing point (center horizon)
       const cx = width / 2;
       const cy = height * 0.35;
+
+      // Perspective Road Base
       ctx.beginPath();
       ctx.moveTo(cx - width * 0.1, cy);
       ctx.lineTo(cx + width * 0.1, cy);
@@ -450,16 +465,19 @@ document.addEventListener('DOMContentLoaded', function () {
       ctx.fillStyle = '#0f172a';
       ctx.fill();
 
+      // Highway Lane Markings & Glowing Streaks
       streaks.forEach(s => {
         s.y += s.speed;
         if (s.y > 1) {
           s.y = 0;
           s.x = Math.random() * 2 - 1;
         }
+
         const px = cx + (s.x * (s.y * width * 0.6));
         const py = cy + (s.y * (height - cy));
         const pLength = s.length * s.y;
         const opacity = Math.min(s.y * 1.5, 0.9);
+
         ctx.beginPath();
         ctx.moveTo(px, py);
         ctx.lineTo(px + (s.x * pLength * 0.2), py + pLength);
@@ -467,28 +485,40 @@ document.addEventListener('DOMContentLoaded', function () {
         ctx.lineWidth = Math.max(1, s.y * 5);
         ctx.stroke();
       });
+
       requestAnimationFrame(renderHighway);
     }
     renderHighway();
   }
 
-  // 9. Background Video Autoplay
+  // 9. Ensure Background Video Autoplay & Fallback Handling
   const heroVideo = document.getElementById('hero-video');
   if (heroVideo) {
     heroVideo.muted = true;
     heroVideo.playsInline = true;
+
     function attemptPlay() {
       const playPromise = heroVideo.play();
       if (playPromise !== undefined) {
-        playPromise.then(() => { heroVideo.style.opacity = '1'; }).catch(() => { heroVideo.style.opacity = '0.4'; });
+        playPromise.then(() => {
+          heroVideo.style.opacity = '1';
+        }).catch(() => {
+          // If browser restricts unprompted autoplay, fallback poster/canvas runs smoothly
+          heroVideo.style.opacity = '0.4';
+        });
       }
     }
+
     heroVideo.addEventListener('loadeddata', attemptPlay);
     heroVideo.addEventListener('canplay', attemptPlay);
     attemptPlay();
+
+    // Re-trigger play on user interaction anywhere on page
     document.addEventListener('click', function playOnInteraction() {
       if (heroVideo.paused) {
-        heroVideo.play().then(() => { heroVideo.style.opacity = '1'; }).catch(() => {});
+        heroVideo.play().then(() => {
+          heroVideo.style.opacity = '1';
+        }).catch(() => {});
       }
     }, { once: true });
   }
@@ -515,23 +545,32 @@ document.addEventListener('DOMContentLoaded', function () {
               <span>📅 July 2026</span> • <span>⏱️ 5 min read</span> • <span>✍️ Get Cabs Travel Desk</span>
             </div>
           </div>
+
           <img src="./public/assets/images/blog-ooty.png" alt="Coimbatore to Ooty Cab Travel" class="blog-featured-img" onerror="this.onerror=null; this.src='./public/assets/images/dest-ooty.png';" />
+
           <p>Ooty, known as the <em>Queen of Hill Stations</em>, is located just 85 KM from Coimbatore city. Traveling by cab from Coimbatore to Ooty gives you the flexibility to enjoy breathtaking viewpoints along the Mettupalayam and Coonoor ghat road with 36 hairpin curves.</p>
+
           <h3 style="font-size:1.4rem; font-weight:800; margin:24px 0 12px 0; color:var(--brand-dark);">1. Ooty Botanical Gardens</h3>
           <p>Spread over 55 acres on the slopes of Doddabetta peak, the Government Botanical Garden features over 1,000 species of exotic plants, ferns, and a 20-million-year-old fossilized tree trunk.</p>
+
           <h3 style="font-size:1.4rem; font-weight:800; margin:24px 0 12px 0; color:var(--brand-dark);">2. Ooty Lake & Boating Spot</h3>
           <p>Constructed in 1824 by John Sullivan, Ooty Lake is an iconic destination for pedal boating and motorboat rides surrounded by tall eucalyptus trees.</p>
+
           <h3 style="font-size:1.4rem; font-weight:800; margin:24px 0 12px 0; color:var(--brand-dark);">3. Doddabetta Peak (2,637 meters)</h3>
           <p>The highest mountain peak in the Nilgiris district. Enjoy panoramic 360-degree views of the valley through the Telescope House observatory.</p>
+
           <h3 style="font-size:1.4rem; font-weight:800; margin:24px 0 12px 0; color:var(--brand-dark);">4. Rose Garden & Tea Park</h3>
           <p>Home to over 20,000 varieties of roses, making it one of the largest rose collections in India.</p>
+
           <div class="blog-cta-banner">
             <h3>Ready for an Ooty Trip from Coimbatore?</h3>
             <p style="margin-bottom:16px;">Book a Sedan for ₹2,380 or an Innova SUV for ₹3,800. Driver Batta included with zero hidden costs!</p>
             <a href="tel:9894020156" class="btn btn-yellow" style="padding:12px 24px;">📞 Call 9894020156 to Book Ooty Cab</a>
           </div>
+
           <h3 style="font-size:1.4rem; font-weight:800; margin:24px 0 12px 0; color:var(--brand-dark);">5. Coonoor Tea Estates & Sim's Park</h3>
           <p>En route from Mettupalayam to Ooty, stop by Coonoor for lush green tea garden photography, fresh factory tea tasting, and Sim's Park botanical displays.</p>
+
           <h3 style="font-size:1.4rem; font-weight:800; margin:24px 0 12px 0; color:var(--brand-dark);">Cab Fare Breakdown (Coimbatore to Ooty)</h3>
           <ul style="margin-left:20px; line-height:1.8;">
             <li><strong>Oneway Sedan (Dzire / Etios):</strong> ₹2,380 ~ ₹2,560 (85 KM + ₹500 Batta + ₹400 Hill Charge)</li>
@@ -556,14 +595,18 @@ document.addEventListener('DOMContentLoaded', function () {
               <span>📅 July 2026</span> • <span>⏱️ 4 min read</span> • <span>✍️ Get Cabs Dispatch Desk</span>
             </div>
           </div>
+
           <img src="./public/assets/images/blog-airport-taxi.png" alt="Coimbatore Airport Taxi Service" class="blog-featured-img" onerror="this.onerror=null; this.src='./public/assets/images/dest-ooty.png';" />
+
           <p>Coimbatore International Airport (CJB) located in Peelamedu connects thousands of business and leisure travelers daily. Getting a reliable taxi with zero surge pricing is crucial for early morning or late night flights.</p>
+
           <h3>Why Choose Get Cabs for Airport Transfers?</h3>
           <ul style="margin-left:20px; line-height:1.8;">
             <li><strong>10-Minute Instant Dispatch:</strong> Our cabs are stationed near Peelamedu, Hopes College, Gandhipuram, and RS Puram.</li>
             <li><strong>Zero Surge Fees:</strong> Unlike app aggregators, Get Cabs maintains fixed transparent ₹28/KM pricing 24 hours a day.</li>
             <li><strong>Flight Delay Monitoring:</strong> Provide your flight number and our driver waits for you at the CJB arrival gate without extra waiting penalties.</li>
           </ul>
+
           <div class="blog-cta-banner">
             <h3>Need an Immediate Airport Pickup or Drop?</h3>
             <p style="margin-bottom:16px;">Call our 24/7 hotline <strong>9894020156</strong> for immediate vehicle assignment in under 10 minutes!</p>
@@ -587,11 +630,15 @@ document.addEventListener('DOMContentLoaded', function () {
               <span>📅 July 2026</span> • <span>⏱️ 6 min read</span> • <span>✍️ Get Cabs Billing Team</span>
             </div>
           </div>
+
           <img src="./public/assets/images/blog-oneway-hacks.png" alt="Oneway Cabs Coimbatore" class="blog-featured-img" onerror="this.onerror=null; this.src='./public/assets/images/dest-ooty.png';" />
+
           <p>Traditional outstation taxis charge return kilometer fares regardless of whether you need the cab for the journey back. Get Cabs Oneway Intercity Service eliminates return charges completely!</p>
+
           <h3>Cost Comparison Example: Coimbatore to Tirupur (55 KM)</h3>
           <p><strong>Traditional Outstation Taxi (Round Trip Charges):</strong> 110 KM @ ₹15/KM + ₹300 Driver Batta = ₹1,950+</p>
           <p><strong>Get Cabs Oneway Fare:</strong> 55 KM @ ₹28/KM + ₹300 Driver Batta = <strong>₹1,710 ~ ₹1,840</strong> (Save money and pay only for actual distance traveled!)</p>
+
           <div class="blog-cta-banner">
             <h3>Book Your Oneway Cab Today</h3>
             <p style="margin-bottom:16px;">Oneway drops available from Coimbatore to Chennai, Bangalore, Salem, Erode, Tirupur, Madurai & Kerala.</p>
@@ -615,14 +662,20 @@ document.addEventListener('DOMContentLoaded', function () {
               <span>📅 July 2026</span> • <span>⏱️ 5 min read</span> • <span>✍️ Get Cabs Tour Desk</span>
             </div>
           </div>
+
           <img src="./public/assets/images/blog-hill-drives.png" alt="Hill Drives Outstation Cabs" class="blog-featured-img" onerror="this.onerror=null; this.src='./public/assets/images/dest-ooty.png';" />
+
           <p>Coimbatore is surrounded by Western Ghats mountain destinations. Hiring an experienced hill station driver ensures comfort, safety, and smooth navigation through foggy hairpin bends.</p>
+
           <h3>1. Valparai (105 KM • 40 Hairpin Bends)</h3>
           <p>A serene tea estate sanctuary with Lion-tailed Macaque sightings and Aliyar Dam views.</p>
+
           <h3>2. Munnar (160 KM • Tea Valley Gateway)</h3>
           <p>Famous for Anamudi Peak, Mattupetty Dam, and sprawling spice plantations.</p>
+
           <h3>3. Kodaikanal (175 KM • Princess of Hill Stations)</h3>
           <p>Explore Kodai Lake, Pillar Rocks, and Coaker's Walk with family SUV comfort.</p>
+
           <div class="blog-cta-banner">
             <h3>Book Your Hill Station SUV Tour</h3>
             <p style="margin-bottom:16px;">Innova Crysta & Ertiga Prime SUVs available with veteran hill drivers.</p>
@@ -646,14 +699,22 @@ document.addEventListener('DOMContentLoaded', function () {
               <span>📅 July 2026</span> • <span>⏱️ 4 min read</span> • <span>✍️ Get Cabs Editorial Team</span>
             </div>
           </div>
+
           <img src="./public/assets/images/blog-red-taxi-compare.png" alt="Best Call Taxi in Coimbatore: Red Taxi vs Get Cabs" class="blog-featured-img" onerror="this.onerror=null; this.src='./public/assets/images/dest-ooty.png';" />
+
           <h2>Best Call Taxi in Coimbatore (2026): Red Taxi vs Ola vs Uber vs FastTrack vs Get Cabs</h2>
+          
           <p>Whether you need an early-morning drop to Coimbatore International Airport (CJB), a quick commute along Avinashi Road, or an outstation cab from Coimbatore to Ooty, picking the right Coimbatore taxi service can make or break your day.</p>
+          
           <p>With several options available—including <strong>Red Taxi Coimbatore</strong>, FastTrack Call Taxi, national aggregators like Ola and Uber, and <strong>Get Cabs</strong>—it helps to know how they stack up in terms of pricing, route knowledge, and overall reliability.</p>
+          
           <p>Here is an honest, comprehensive comparison of the top call taxi services in Coimbatore in 2026.</p>
+
           <h3 style="font-size:1.35rem; font-weight:800; margin:28px 0 12px 0; color:var(--brand-dark);">The Competition Breakdown</h3>
+
           <h4 style="font-size:1.15rem; font-weight:700; margin:16px 0 8px 0; color:#d90429;">1. FastTrack Call Taxi</h4>
           <p>FastTrack is one of the oldest legacy call taxi networks in Tamil Nadu. They offer standard city cab rides and outstation drop taxi services. However, during peak hours, booking delays can occur due to fleet limitations compared to modern app platforms, and fares vary depending on demand.</p>
+
           <h4 style="font-size:1.15rem; font-weight:700; margin:16px 0 8px 0; color:#d90429;">2. Ola & Uber</h4>
           <p>Nationwide ride-hailing apps like Ola and Uber offer quick access to hatchbacks and sedans. However, Kovai commuters regularly encounter major drawbacks:</p>
           <ul style="margin-left:20px; line-height:1.8; margin-bottom:16px;">
@@ -661,22 +722,30 @@ document.addEventListener('DOMContentLoaded', function () {
             <li><strong>Steep surge pricing</strong> during rains, peak office hours, or high demand near TIDEL Park and Peelamedu.</li>
             <li>Drivers unfamiliar with local shortcuts who rely strictly on GPS.</li>
           </ul>
+
           <h4 style="font-size:1.15rem; font-weight:700; margin:16px 0 8px 0; color:#d90429;">3. Red Taxi Coimbatore</h4>
           <p>Red Taxi built a solid market presence across Kovai, Chennai, and Madurai. However, local riders frequently complain about two key issues:</p>
           <ul style="margin-left:20px; line-height:1.8; margin-bottom:16px;">
             <li><strong>Signal & Traffic Metering Fees:</strong> When your Red Taxi gets caught in traffic near Gandhipuram or waits at a long red light, the running meter charges extra per-minute waiting fees.</li>
             <li><strong>Migrated Drivers:</strong> A large portion of their driver pool consists of drivers migrated from outside regions who lack deep familiarity with Coimbatore's local neighborhoods and shortcuts.</li>
           </ul>
+
           <h4 style="font-size:1.15rem; font-weight:700; margin:16px 0 8px 0; color:#16a34a;">4. Get Cabs (The Preferred Local Alternative)</h4>
           <p>Get Cabs was designed specifically around what local commuters and frequent travelers actually need: zero traffic hidden fees and true local driver expertise.</p>
+
           <h3 style="font-size:1.35rem; font-weight:800; margin:28px 0 12px 0; color:var(--brand-dark);">3 Reasons Locals Are Switching to Get Cabs</h3>
+
           <p><strong>1. 100% Local, Personally Verified Drivers</strong><br>
           Unlike platforms that onboard outstation drivers unfamiliar with Kovai's roads, Get Cabs uses personally verified local Coimbatore drivers. They know every shortcut around Mettupalayam Road, Trichy Road, RS Puram, and Town Hall—getting you to your destination faster without relying blindly on map apps.</p>
+
           <p><strong>2. Zero Signal & Traffic Metering Charges</strong><br>
           With Red Taxi and other traditional meter-based services, your fare rises even when sitting completely still in a traffic jam. Get Cabs features a Zero-Traffic-Metering policy. You are never penalized for Coimbatore's signal stops or rush-hour traffic.</p>
+
           <p><strong>3. Fair & Transparent Billing</strong><br>
           Unexpected trip disruptions happen. Automated meters in standard taxis treat every pause—even if a passenger feels motion-sick—as extra billable time. At Get Cabs, our drivers prioritize fair service and customer care over squeezing extra rupees out of every stop.</p>
+
           <h3 style="font-size:1.35rem; font-weight:800; margin:28px 0 16px 0; color:var(--brand-dark);">Multi-Provider Feature Comparison</h3>
+
           <div class="price-table-wrap" style="margin-bottom:24px;">
             <table style="width:100%; border-collapse:collapse; font-size:0.92rem;">
               <thead>
@@ -727,6 +796,7 @@ document.addEventListener('DOMContentLoaded', function () {
               </tbody>
             </table>
           </div>
+
           <h3 style="font-size:1.35rem; font-weight:800; margin:28px 0 12px 0; color:var(--brand-dark);">Top Routes Covered by Get Cabs</h3>
           <p>Whether you need a local Kovai call taxi or an outstation taxi from Coimbatore, Get Cabs covers all major routes:</p>
           <ul style="margin-left:20px; line-height:1.8; margin-bottom:20px;">
@@ -734,8 +804,10 @@ document.addEventListener('DOMContentLoaded', function () {
             <li><strong>City Commutes:</strong> Quick rides to TIDEL Park, Peelamedu, Saravanampatti, Singanallur, and RS Puram.</li>
             <li><strong>Outstation Routes:</strong> Outstation drop taxi packages to Ooty, Coonoor, Valparai, Pollachi, Isha Yoga Center, Palani, Mysore, and Bangalore.</li>
           </ul>
+
           <h3 style="font-size:1.35rem; font-weight:800; margin:28px 0 12px 0; color:var(--brand-dark);">Final Verdict</h3>
           <p>While legacy players like FastTrack and Red Taxi Coimbatore paved the way, and apps like Ola/Uber offer basic convenience, <strong>Get Cabs delivers the ultimate balance for 2026:</strong> honest flat-rate pricing, zero traffic fees, and experienced local drivers who know Kovai inside out.</p>
+
           <div class="blog-cta-banner" style="margin-top:24px;">
             <h3>Tired of traffic meters and driver cancellations?</h3>
             <p style="margin-bottom:16px;">Book your next ride with Get Cabs today via 1-click phone call or web booking!</p>
@@ -753,9 +825,11 @@ document.addEventListener('DOMContentLoaded', function () {
         <div class="policy-doc">
           <h2>Get Cabs Coimbatore Privacy Policy</h2>
           <p style="color:var(--text-muted);">Last Updated: July 2026 • Official Policy Document</p>
+          
           <div class="policy-highlight-box">
             🔒 <strong>Commitment to Confidentiality:</strong> Get Cabs respects your personal data. We do NOT share, sell, or disclose your phone numbers, name, or trip locations to external third parties or telemarketing agencies.
           </div>
+
           <h3>1. Data We Collect</h3>
           <p>To provide accurate taxi dispatch and driver assignment in Coimbatore, Get Cabs collects:</p>
           <ul>
@@ -763,6 +837,7 @@ document.addEventListener('DOMContentLoaded', function () {
             <li><strong>Trip Information:</strong> Pickup address, landmark, destination drop point, requested travel date, and preferred vehicle type (Sedan / SUV / Traveller).</li>
             <li><strong>GPS & Route Data:</strong> Live GPS coordinates utilized solely by the assigned driver during active ride navigation.</li>
           </ul>
+
           <h3>2. How We Use Your Data</h3>
           <p>Your details are strictly used for:</p>
           <ul>
@@ -770,8 +845,10 @@ document.addEventListener('DOMContentLoaded', function () {
             <li>Sending booking confirmation SMS, driver contact details, and vehicle registration numbers.</li>
             <li>Customer support resolution and fare calculation transparency.</li>
           </ul>
+
           <h3>3. Data Protection & Security</h3>
           <p>All online reservation details are stored securely. Payment information handled directly with drivers via cash or UPI is verified immediately with zero stored card details.</p>
+
           <h3>4. Contact Data Officer</h3>
           <p>For privacy queries or request for data removal, contact Get Cabs Coimbatore at <strong>booking@getcabs.in</strong> or call <strong>9894020156</strong>.</p>
         </div>
@@ -783,20 +860,24 @@ document.addEventListener('DOMContentLoaded', function () {
         <div class="policy-doc">
           <h2>Terms & Conditions of Service</h2>
           <p style="color:var(--text-muted);">Effective July 2026 • Get Cabs Coimbatore</p>
+
           <h3>1. Booking & Fare Structure</h3>
           <ul>
             <li><strong>Local Rides:</strong> Transparent ₹28/KM pricing for local city rides without peak surge charges.</li>
             <li><strong>Oneway Rides:</strong> ₹28/KM + Driver Batta (₹500 for Ooty route, ₹300 for other intercity routes) + ₹400 Hill Charge where applicable.</li>
             <li><strong>Outstation Round Trip:</strong> Charged at ₹15/KM (up & down cumulative mileage) + ₹300-₹500 daily Driver Batta. Minimum daily mileage benchmark is 250 KM per day as per Tamil Nadu commercial rules.</li>
           </ul>
+
           <h3>2. Tolls, Parking & State Permits</h3>
           <p>Highway toll booth charges, airport entry/parking fees, and inter-state permit taxes (e.g. Kerala / Karnataka permits) are extra at actuals payable by the passenger or added to the final invoice.</p>
+
           <h3>3. Passenger Luggage & Vehicle Capacity</h3>
           <ul>
             <li><strong>4-Seater Sedan:</strong> Maximum 4 passengers + 3 medium suitcases.</li>
             <li><strong>6-Seater SUV:</strong> Maximum 6 passengers + 4 medium suitcases.</li>
             <li><strong>7-Seater Innova:</strong> Maximum 7 passengers + 4 large suitcases.</li>
           </ul>
+
           <h3>4. Safety & Conduct</h3>
           <p>Smoking, consumption of alcohol, or illegal substances inside Get Cabs vehicles is strictly prohibited. Drivers hold full rights to terminate rides in cases of unruly behavior.</p>
         </div>
@@ -808,16 +889,20 @@ document.addEventListener('DOMContentLoaded', function () {
         <div class="policy-doc">
           <h2>Cancellation & Refund Policy</h2>
           <p style="color:var(--text-muted);">Transparent & Customer-Friendly Policy</p>
+
           <div class="policy-highlight-box">
             ✅ <strong>100% Free Cancellation:</strong> Cancel your booking free of charge anytime prior to driver vehicle dispatch!
           </div>
+
           <h3>1. Cancellation Guidelines</h3>
           <ul>
             <li><strong>Before Driver Dispatch:</strong> Zero cancellation fee.</li>
             <li><strong>After Driver Arrives at Pickup Location:</strong> If the ride is cancelled after the driver has reached your pickup spot in Coimbatore, a nominal ₹100 driver arrival fee applies.</li>
           </ul>
+
           <h3>2. Pre-Paid & Advance Booking Refunds</h3>
           <p>For advance outstation or airport reservations where advance payment was made, full refunds are processed within 24 business hours directly to your UPI/Bank account.</p>
+
           <h3>3. Extreme Weather & Hill Road Closures</h3>
           <p>In case of unexpected weather landslides, government road closures, or Nilgiris ghat road bans on Ooty / Valparai routes, Get Cabs provides 100% fee waiver and immediate re-routing support.</p>
         </div>
@@ -829,15 +914,20 @@ document.addEventListener('DOMContentLoaded', function () {
         <div class="policy-doc">
           <h2>Get Cabs Frequently Asked Questions</h2>
           <p style="margin-bottom:20px; color:var(--text-muted);">Everything you need to know about Coimbatore cab booking, rates, and outstation trips.</p>
+
           <div class="contact-card-box">
             <h3 style="margin-top:0;">1. How fast can I get a cab in Coimbatore?</h3>
             <p>Our cabs are stationed across Gandhipuram, Peelamedu, RS Puram, Saravanampatti, Singanallur, and Coimbatore Airport. Standard pickup time is 5 to 10 minutes!</p>
+
             <h3>2. How are Oneway Intercity fares calculated?</h3>
             <p>Oneway fares are billed strictly at ₹28 per KM for actual travel distance plus applicable Driver Batta (₹500 for Ooty, ₹300 for non-hill routes). You pay ZERO return charges.</p>
+
             <h3>3. Are there extra night surge charges for city local rides?</h3>
             <p>No! Get Cabs does NOT charge night surge multipliers for local city transfers in Coimbatore.</p>
+
             <h3>4. Can I book an Innova Crysta for an Ooty family trip?</h3>
             <p>Yes! We specialize in Innova Crysta and Ertiga SUV hill station trips with experienced hill mountain drivers.</p>
+
             <h3>5. How do I book instantly?</h3>
             <p>Call our 24/7 hotline directly at <strong style="color:var(--brand-red);">9894020156</strong> or fill out the booking form on the main page.</p>
           </div>
@@ -850,6 +940,7 @@ document.addEventListener('DOMContentLoaded', function () {
         <div class="policy-doc">
           <h2>Contact Us - Get Cabs Coimbatore</h2>
           <p>We are available 24 hours a day, 7 days a week to assist your travel needs.</p>
+
           <div class="contact-info-list">
             <div class="contact-item">
               <div class="contact-icon">📞</div>
@@ -859,6 +950,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <div style="font-size:0.8rem; color:var(--text-muted);">Instant Call Booking</div>
               </div>
             </div>
+
             <div class="contact-item">
               <div class="contact-icon">📍</div>
               <div>
@@ -866,6 +958,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <div style="font-size:0.9rem; margin-top:2px;">Gandhipuram Taxi Stand & Peelamedu Airport Rd, Coimbatore - 641001</div>
               </div>
             </div>
+
             <div class="contact-item">
               <div class="contact-icon">✉️</div>
               <div>
@@ -875,6 +968,7 @@ document.addEventListener('DOMContentLoaded', function () {
               </div>
             </div>
           </div>
+
           <div class="contact-card-box" style="margin-top:24px;">
             <h3>Send Direct Message / Query</h3>
             <form id="direct-contact-form" onsubmit="event.preventDefault(); alert('Thank you! Get Cabs Coimbatore team will call you back at 9894020156 shortly.');">
@@ -895,21 +989,25 @@ document.addEventListener('DOMContentLoaded', function () {
         <div class="policy-doc">
           <h2>Get Cabs Official Tariff Card</h2>
           <p style="margin-bottom:16px; color:var(--text-muted);">Transparent, fixed fare structure across local city rides, hourly rentals, and outstation drops in Coimbatore.</p>
+
           <div class="policy-highlight-box" style="margin-bottom:20px;">
             ❄️ <strong>Mandatory AC Comfort:</strong> Air Conditioning is enabled by default for all Mini & Sedan rides (unless specifically requested off by the customer).
           </div>
+
           <h3 style="color:var(--brand-dark); font-size:1.2rem; margin-bottom:10px;">1. Local City Rides (Mini / Sedan Cabs)</h3>
           <p style="line-height:1.7; margin-bottom:10px;">Instant local city rides and point-to-point drop services within Coimbatore with verified local professional drivers.</p>
           <ul style="line-height:1.8; margin-left:20px; margin-bottom:20px;">
             <li><strong>Guaranteed Standard Rates:</strong> Fixed upfront taxi pricing with zero surge pricing or meter tampering.</li>
             <li><strong>District Border Outskirts Surcharge:</strong> Outer area trips include a standard adjustment (+₹100 to ₹150) for areas including <em>Karumathampatti, Karanampettai, Paapampatti, Ganeshapuram / Kovilpalayam, Karamadai, Booluvampatti / Pooluvapatti, Ettimadai, Kinathukadavu</em>.</li>
           </ul>
+
           <h3 style="color:var(--brand-dark); font-size:1.2rem; margin-bottom:10px;">2. Hourly & Daily Rental Packages</h3>
           <ul style="line-height:1.8; margin-left:20px; margin-bottom:20px;">
             <li><strong>Hourly Rental Package:</strong> <strong style="color:var(--brand-red);">₹350 / Hour</strong> (Includes 10 KM free per hour; Additional distance @ ₹25/KM).</li>
             <li><strong>Package A (10 Hours / 100 KM Day Package):</strong> <strong style="color:var(--brand-red);">₹3,000 flat</strong> (Extra KM: ₹10/KM).</li>
             <li><strong>Package B (12 Hours / 100 KM Day Package):</strong> <strong style="color:var(--brand-red);">₹3,500 flat</strong> (Extra time: ₹150/hr for time exceeding 10 hours).</li>
           </ul>
+
           <h3 style="color:var(--brand-dark); font-size:1.2rem; margin-bottom:10px;">3. One-Way Drop Tariffs (From Gandhipuram, Ukkadam & Railway Station)</h3>
           <div style="overflow-x:auto; margin-bottom:20px;">
             <table class="tariff-table" style="width:100%; border-collapse:collapse; background:#ffffff; border:1px solid #e2e8f0; border-radius:8px; font-size:0.95rem;">
@@ -940,16 +1038,19 @@ document.addEventListener('DOMContentLoaded', function () {
               </tbody>
             </table>
           </div>
+
           <h3 style="color:var(--brand-dark); font-size:1.2rem; margin-bottom:10px;">4. Distance-Based Round Trip & Long Drop Rules</h3>
           <ul style="line-height:1.8; margin-left:20px; margin-bottom:20px;">
             <li><strong>Oneway drops under 100 KM:</strong> Calculated at round-trip mileage @ <strong>₹17 / KM</strong> (Go + Return).</li>
             <li><strong>Oneway drops over 130 KM:</strong> Calculated at round-trip mileage @ <strong>₹14 / KM</strong> (Go + Return) plus <strong>₹400 Driver Batta</strong>.</li>
           </ul>
+
           <h3 style="color:var(--brand-dark); font-size:1.2rem; margin-bottom:10px;">5. General Exclusions & Rules</h3>
           <ul style="line-height:1.8; margin-left:20px; margin-bottom:20px;">
             <li><strong>Tolls, Parking & State Permits:</strong> Toll gate charges, parking fees, and interstate permit fees are not included and must be paid directly by the customer at actuals.</li>
             <li><strong>Net Driver Rate:</strong> Fares represent net driver earnings with zero driver commissions deducted.</li>
           </ul>
+
           <div style="text-align:center; margin-top:24px;">
             <a href="tel:9894020156" class="btn btn-red" style="padding:12px 28px; font-size:1rem; display:inline-block;">📞 Call 9894020156 to Book Cab</a>
           </div>
@@ -962,6 +1063,7 @@ document.addEventListener('DOMContentLoaded', function () {
         <div class="policy-doc">
           <h2>Popular Intercity & Outstation Drop Routes</h2>
           <p style="margin-bottom:16px;">Fixed net drop rates for Mini & Sedan cabs from Coimbatore hubs.</p>
+
           <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:16px; margin-top:20px;">
             <div style="background:#f8fafc; border:1px solid #cbd5e1; padding:16px; border-radius:8px;">
               <h4 style="font-size:1.1rem; color:var(--brand-dark); margin-bottom:4px;">Coimbatore ➔ Ooty Bus Stand</h4>
@@ -969,30 +1071,35 @@ document.addEventListener('DOMContentLoaded', function () {
               <div style="font-size:1.2rem; color:var(--brand-red); font-weight:800; margin:8px 0;">₹3,500</div>
               <a href="tel:9894020156" class="btn btn-red" style="padding:6px 12px; font-size:0.8rem; display:inline-block;">Book Ooty Cab</a>
             </div>
+
             <div style="background:#f8fafc; border:1px solid #cbd5e1; padding:16px; border-radius:8px;">
               <h4 style="font-size:1.1rem; color:var(--brand-dark); margin-bottom:4px;">Coimbatore ➔ Pollachi</h4>
               <p style="font-size:0.85rem; color:var(--text-muted);">43 KM • Express Corridor</p>
               <div style="font-size:1.2rem; color:var(--brand-red); font-weight:800; margin:8px 0;">₹1,600</div>
               <a href="tel:9894020156" class="btn btn-red" style="padding:6px 12px; font-size:0.8rem; display:inline-block;">Book Pollachi Cab</a>
             </div>
+
             <div style="background:#f8fafc; border:1px solid #cbd5e1; padding:16px; border-radius:8px;">
               <h4 style="font-size:1.1rem; color:var(--brand-dark); margin-bottom:4px;">Coimbatore ➔ Palani</h4>
               <p style="font-size:0.85rem; color:var(--text-muted);">110 KM • Temple Highway</p>
               <div style="font-size:1.2rem; color:var(--brand-red); font-weight:800; margin:8px 0;">₹3,900</div>
               <a href="tel:9894020156" class="btn btn-red" style="padding:6px 12px; font-size:0.8rem; display:inline-block;">Book Palani Cab</a>
             </div>
+
             <div style="background:#f8fafc; border:1px solid #cbd5e1; padding:16px; border-radius:8px;">
               <h4 style="font-size:1.1rem; color:var(--brand-dark); margin-bottom:4px;">Coimbatore ➔ Erode</h4>
               <p style="font-size:0.85rem; color:var(--text-muted);">100 KM • Highway Express</p>
               <div style="font-size:1.2rem; color:var(--brand-red); font-weight:800; margin:8px 0;">₹3,500</div>
               <a href="tel:9894020156" class="btn btn-red" style="padding:6px 12px; font-size:0.8rem; display:inline-block;">Book Erode Cab</a>
             </div>
+
             <div style="background:#f8fafc; border:1px solid #cbd5e1; padding:16px; border-radius:8px;">
               <h4 style="font-size:1.1rem; color:var(--brand-dark); margin-bottom:4px;">Coimbatore ➔ Sathyamangalam</h4>
               <p style="font-size:0.85rem; color:var(--text-muted);">70 KM • Highway Route</p>
               <div style="font-size:1.2rem; color:var(--brand-red); font-weight:800; margin:8px 0;">₹2,500</div>
               <a href="tel:9894020156" class="btn btn-red" style="padding:6px 12px; font-size:0.8rem; display:inline-block;">Book Sathyamangalam Cab</a>
             </div>
+
             <div style="background:#f8fafc; border:1px solid #cbd5e1; padding:16px; border-radius:8px;">
               <h4 style="font-size:1.1rem; color:var(--brand-dark); margin-bottom:4px;">Coimbatore ➔ Coonoor</h4>
               <p style="font-size:0.85rem; color:var(--text-muted);">70 KM • Hill Route</p>
@@ -1056,6 +1163,7 @@ document.addEventListener('DOMContentLoaded', function () {
             <h1>Ooty, Coonoor & Kotagiri Nilgiris Tour Package</h1>
             <p style="color:#e2e8f0; font-size:1.05rem;">Experience 36 Hairpin Curves, sprawling tea gardens, cascading waterfalls, and peak viewpoints from Coimbatore.</p>
           </div>
+
           <div class="tour-specs-strip">
             <div class="tour-spec-item"><span>Total Distance</span><span>85 KM (One Way)</span></div>
             <div class="tour-spec-item"><span>Est. Drive Time</span><span>2.5 to 3.5 Hours</span></div>
@@ -1063,6 +1171,7 @@ document.addEventListener('DOMContentLoaded', function () {
             <div class="tour-spec-item"><span>Ideal Timing</span><span>6:00 AM Departure</span></div>
             <div class="tour-spec-item"><span>Base Fare</span><span>₹2,380 Onwards</span></div>
           </div>
+
           <div class="guide-section-box">
             <h3>📍 On-The-Way Sightseeing Places</h3>
             <p>Your journey from Coimbatore to the Nilgiris passes through rich agricultural plains and lush mountain foothills:</p>
@@ -1073,6 +1182,7 @@ document.addEventListener('DOMContentLoaded', function () {
               <li><strong>Coonoor Tea Estates:</strong> Sprawling green tea carpets along the road. Great for tea tasting and photo stops.</li>
             </ul>
           </div>
+
           <div class="guide-section-box">
             <h3>🛣️ Road Conditions, Curves & Hairpin Bends</h3>
             <div class="road-bends-warning">
@@ -1085,6 +1195,7 @@ document.addEventListener('DOMContentLoaded', function () {
               <li>Our drivers are veteran Nilgiris hill specialists trained in gear braking and mountain right-of-way courtesy.</li>
             </ul>
           </div>
+
           <div class="guide-section-box">
             <h3>🛕 Popular Temples, Rivers & Waterfalls</h3>
             <ul style="margin-left:20px; line-height:1.8;">
@@ -1094,6 +1205,7 @@ document.addEventListener('DOMContentLoaded', function () {
               <li><strong>Pykara River & Waterfalls:</strong> Pristine river surrounded by pine forests offering speed boat rides and waterfall vistas.</li>
             </ul>
           </div>
+
           <div class="guide-section-box">
             <h3>⏱️ Timings & Operating Hours</h3>
             <ul style="margin-left:20px; line-height:1.8;">
@@ -1103,6 +1215,7 @@ document.addEventListener('DOMContentLoaded', function () {
               <li><strong>Pykara Lake Boating:</strong> 9:30 AM – 5:00 PM</li>
             </ul>
           </div>
+
           <div class="guide-section-box">
             <h3>🍽️ Verified Highway Restaurants & Restrooms</h3>
             <div class="restroom-food-box">
@@ -1114,6 +1227,7 @@ document.addEventListener('DOMContentLoaded', function () {
               <li><strong>Hotel Annapoorna (Ooty Main Market):</strong> Traditional vegetarian meals with hygienic washrooms.</li>
             </ul>
           </div>
+
           <div class="guide-section-box">
             <h3>💰 Complete Vehicle Tariff Breakdown</h3>
             <div class="price-table-wrap">
@@ -1154,6 +1268,7 @@ document.addEventListener('DOMContentLoaded', function () {
             </div>
             <p style="font-size:0.85rem; color:#64748b; margin-top:10px;">*Tolls, state permits (if applicable), and parking fees paid at actuals. Zero hidden surge fees!</p>
           </div>
+
           <div class="blog-cta-banner" style="margin-top:24px;">
             <h3>Book Your Ooty, Coonoor & Kotagiri Cab Tour</h3>
             <p style="margin-bottom:16px;">Call Get Cabs 24/7 hotline or message on WhatsApp for instant booking confirmation!</p>
@@ -1179,6 +1294,7 @@ document.addEventListener('DOMContentLoaded', function () {
             <h1>Munnar Tea Hills & Waterfalls Tour Package</h1>
             <p style="color:#e2e8f0; font-size:1.05rem;">Discover sprawling spice plantations, Cheeyappara waterfalls, Marayoor sandalwood forests, and Anamudi Peak views from Coimbatore.</p>
           </div>
+
           <div class="tour-specs-strip">
             <div class="tour-spec-item"><span>Total Distance</span><span>160 KM (One Way)</span></div>
             <div class="tour-spec-item"><span>Est. Drive Time</span><span>4.5 Hours</span></div>
@@ -1186,6 +1302,7 @@ document.addEventListener('DOMContentLoaded', function () {
             <div class="tour-spec-item"><span>Ideal Timing</span><span>5:30 AM Departure</span></div>
             <div class="tour-spec-item"><span>Base Fare</span><span>₹3,800 Onwards</span></div>
           </div>
+
           <div class="guide-section-box">
             <h3>📍 On-The-Way Sightseeing Places</h3>
             <p>The scenic drive to Munnar via Udumalpet offers incredible ecological diversity:</p>
@@ -1197,6 +1314,7 @@ document.addEventListener('DOMContentLoaded', function () {
               <li><strong>Lakkam Waterfalls:</strong> Beautiful cascading waterfall right on the Marayoor-Munnar roadside.</li>
             </ul>
           </div>
+
           <div class="guide-section-box">
             <h3>🛣️ Road Conditions, Curves & Bends</h3>
             <div class="road-bends-warning">
@@ -1208,6 +1326,7 @@ document.addEventListener('DOMContentLoaded', function () {
               <li>Spacious SUV vehicles (Ertiga / Innova Crysta) are highly recommended for family comfort on this 4.5-hour hill drive.</li>
             </ul>
           </div>
+
           <div class="guide-section-box">
             <h3>🛕 Popular Temples, Rivers & Waterfalls</h3>
             <ul style="margin-left:20px; line-height:1.8;">
@@ -1216,6 +1335,7 @@ document.addEventListener('DOMContentLoaded', function () {
               <li><strong>Pamba River Tributaries:</strong> Pristine mountain streams flowing alongside the highway.</li>
             </ul>
           </div>
+
           <div class="guide-section-box">
             <h3>⏱️ Timings & Operating Hours</h3>
             <ul style="margin-left:20px; line-height:1.8;">
@@ -1225,6 +1345,7 @@ document.addEventListener('DOMContentLoaded', function () {
               <li><strong>Mattupetty Dam Boating:</strong> 9:00 AM – 5:30 PM</li>
             </ul>
           </div>
+
           <div class="guide-section-box">
             <h3>🍽️ Verified Highway Restaurants & Restrooms</h3>
             <div class="restroom-food-box">
@@ -1236,6 +1357,7 @@ document.addEventListener('DOMContentLoaded', function () {
               <li><strong>Rapsy Restaurant (Munnar Town):</strong> Authentic Malabar biryani and appam stew.</li>
             </ul>
           </div>
+
           <div class="guide-section-box">
             <h3>💰 Complete Vehicle Tariff Breakdown</h3>
             <div class="price-table-wrap">
@@ -1271,6 +1393,7 @@ document.addEventListener('DOMContentLoaded', function () {
               </table>
             </div>
           </div>
+
           <div class="blog-cta-banner" style="margin-top:24px;">
             <h3>Book Your Munnar Hill & Waterfall Tour</h3>
             <p style="margin-bottom:16px;">Speak with Get Cabs Munnar travel desk for customized hotel + cab itineraries!</p>
@@ -1293,6 +1416,7 @@ document.addEventListener('DOMContentLoaded', function () {
             <h1>Kodaikanal Lake & Mountain Peak Tour Package</h1>
             <p style="color:#e2e8f0; font-size:1.05rem;">Explore Kodai Lake boating, Pillar Rocks, Coaker's Walk, Pine Forests, and Silver Cascade waterfalls from Coimbatore.</p>
           </div>
+
           <div class="tour-specs-strip">
             <div class="tour-spec-item"><span>Total Distance</span><span>175 KM (One Way)</span></div>
             <div class="tour-spec-item"><span>Est. Drive Time</span><span>4.5 Hours</span></div>
@@ -1300,6 +1424,7 @@ document.addEventListener('DOMContentLoaded', function () {
             <div class="tour-spec-item"><span>Ideal Timing</span><span>5:30 AM Departure</span></div>
             <div class="tour-spec-item"><span>Base Fare</span><span>₹4,200 Onwards</span></div>
           </div>
+
           <div class="guide-section-box">
             <h3>📍 On-The-Way Sightseeing Places</h3>
             <ul style="margin-left:20px; line-height:1.8;">
@@ -1309,12 +1434,14 @@ document.addEventListener('DOMContentLoaded', function () {
               <li><strong>Silver Cascade Waterfalls:</strong> Magnificent 180-foot waterfall located right at the entrance of Kodaikanal.</li>
             </ul>
           </div>
+
           <div class="guide-section-box">
             <h3>🛣️ Road Conditions, Curves & Hairpin Bends</h3>
             <div class="road-bends-warning">
               ⚠️ <strong>14 Hairpin Bends Ghat Road:</strong> The Batlagundu to Kodaikanal road ascends smoothly with 14 wide hairpin bends. Safe, wide tar highway.
             </div>
           </div>
+
           <div class="guide-section-box">
             <h3>🛕 Popular Temples, Rivers & Waterfalls</h3>
             <ul style="margin-left:20px; line-height:1.8;">
@@ -1323,6 +1450,7 @@ document.addEventListener('DOMContentLoaded', function () {
               <li><strong>Bear Shola Falls:</strong> Tranquil waterfall inside a dense reserve forest.</li>
             </ul>
           </div>
+
           <div class="guide-section-box">
             <h3>⏱️ Timings & Operating Hours</h3>
             <ul style="margin-left:20px; line-height:1.8;">
@@ -1332,6 +1460,7 @@ document.addEventListener('DOMContentLoaded', function () {
               <li><strong>Pillar Rocks Viewpoint:</strong> 9:00 AM – 5:00 PM</li>
             </ul>
           </div>
+
           <div class="guide-section-box">
             <h3>🍽️ Verified Highway Restaurants & Restrooms</h3>
             <div class="restroom-food-box">
@@ -1343,6 +1472,7 @@ document.addEventListener('DOMContentLoaded', function () {
               <li><strong>Cloud Street Cafe (Seven Road Junction):</strong> Wood-fired pizzas and hot chocolate.</li>
             </ul>
           </div>
+
           <div class="guide-section-box">
             <h3>💰 Complete Vehicle Tariff Breakdown</h3>
             <div class="price-table-wrap">
@@ -1378,6 +1508,7 @@ document.addEventListener('DOMContentLoaded', function () {
               </table>
             </div>
           </div>
+
           <div class="blog-cta-banner" style="margin-top:24px;">
             <h3>Book Kodaikanal Cab Package</h3>
             <a href="tel:9894020156" class="btn btn-yellow" style="padding:12px 24px;">📞 Call 9894020156</a>
@@ -1391,7 +1522,7 @@ document.addEventListener('DOMContentLoaded', function () {
       duration: 'Full Day Tour',
       distance: '195 KM (4 Hours Drive)',
       startingPrice: '₹4,800',
-      img: './public/assets/images/dest-coonoor.png',
+      img: './public/assets/images/dest-yercaud.png',
       content: `
         <div class="tour-detail-container">
           <div class="tour-hero-header">
@@ -1399,6 +1530,7 @@ document.addEventListener('DOMContentLoaded', function () {
             <h1>Yercaud Shevaroy Hills Gateway Tour Package</h1>
             <p style="color:#e2e8f0; font-size:1.05rem;">Ascend the 20 Hairpin Bends to Shevaroy Hills, Emerald Lake, Pagoda Point, and Killiyur Waterfalls.</p>
           </div>
+
           <div class="tour-specs-strip">
             <div class="tour-spec-item"><span>Total Distance</span><span>195 KM (One Way)</span></div>
             <div class="tour-spec-item"><span>Est. Drive Time</span><span>4 Hours</span></div>
@@ -1406,6 +1538,7 @@ document.addEventListener('DOMContentLoaded', function () {
             <div class="tour-spec-item"><span>Ideal Timing</span><span>6:00 AM Departure</span></div>
             <div class="tour-spec-item"><span>Base Fare</span><span>₹4,800 Onwards</span></div>
           </div>
+
           <div class="guide-section-box">
             <h3>📍 On-The-Way Sightseeing Places</h3>
             <ul style="margin-left:20px; line-height:1.8;">
@@ -1414,12 +1547,14 @@ document.addEventListener('DOMContentLoaded', function () {
               <li><strong>20 Hairpin Bends Viewpoints:</strong> Scenic pull-over spots overlooking Salem city lights.</li>
             </ul>
           </div>
+
           <div class="guide-section-box">
             <h3>🛣️ Road Conditions, Curves & Hairpin Bends</h3>
             <div class="road-bends-warning">
               ⚠️ <strong>20 Hairpin Bends Ascent:</strong> Well-engineered 30 KM mountain road with well-banked hairpin turns and LED reflectors.
             </div>
           </div>
+
           <div class="guide-section-box">
             <h3>🛕 Popular Temples, Rivers & Waterfalls</h3>
             <ul style="margin-left:20px; line-height:1.8;">
@@ -1428,6 +1563,7 @@ document.addEventListener('DOMContentLoaded', function () {
               <li><strong>Raja Rajeshwari Temple:</strong> Peaceful spiritual temple surrounded by spice orchards.</li>
             </ul>
           </div>
+
           <div class="guide-section-box">
             <h3>⏱️ Timings & Operating Hours</h3>
             <ul style="margin-left:20px; line-height:1.8;">
@@ -1436,12 +1572,14 @@ document.addEventListener('DOMContentLoaded', function () {
               <li><strong>Botanical Garden & Orchidarium:</strong> 9:00 AM – 5:00 PM</li>
             </ul>
           </div>
+
           <div class="guide-section-box">
             <h3>🍽️ Verified Highway Restaurants & Restrooms</h3>
             <div class="restroom-food-box">
               🧼 <strong>Hygienic Restrooms:</strong> Saravana Bhavan Salem Highway Plaza offers clean washrooms and spacious parking.
             </div>
           </div>
+
           <div class="guide-section-box">
             <h3>💰 Complete Vehicle Tariff Breakdown</h3>
             <div class="price-table-wrap">
@@ -1473,6 +1611,7 @@ document.addEventListener('DOMContentLoaded', function () {
               </table>
             </div>
           </div>
+
           <div class="blog-cta-banner" style="margin-top:24px;">
             <h3>Book Yercaud Cab Tour</h3>
             <a href="tel:9894020156" class="btn btn-yellow" style="padding:12px 24px;">📞 Call 9894020156</a>
@@ -1486,7 +1625,7 @@ document.addEventListener('DOMContentLoaded', function () {
       duration: 'Half Day / Full Day',
       distance: '30 KM from City (45 Mins)',
       startingPrice: '₹1,200',
-      img: './public/assets/images/dest-adiyogi.png',
+      img: './public/assets/images/Dest-adiyogi.png',
       content: `
         <div class="tour-detail-container">
           <div class="tour-hero-header">
@@ -1494,6 +1633,7 @@ document.addEventListener('DOMContentLoaded', function () {
             <h1>Isha Yoga Center & Vellingiri Hills Sacred Package</h1>
             <p style="color:#e2e8f0; font-size:1.05rem;">Visit the 112ft Adiyogi Shiva Statue, Dhyanalinga, Perur Pateeswarar Temple, and Kovai Kutralam waterfalls.</p>
           </div>
+
           <div class="tour-specs-strip">
             <div class="tour-spec-item"><span>Distance</span><span>30 KM from City</span></div>
             <div class="tour-spec-item"><span>Drive Time</span><span>45 Minutes</span></div>
@@ -1501,6 +1641,7 @@ document.addEventListener('DOMContentLoaded', function () {
             <div class="tour-spec-item"><span>Ideal Timing</span><span>6 AM or 3 PM</span></div>
             <div class="tour-spec-item"><span>Base Fare</span><span>₹1,200 Onwards</span></div>
           </div>
+
           <div class="guide-section-box">
             <h3>📍 On-The-Way Sightseeing Places</h3>
             <ul style="margin-left:20px; line-height:1.8;">
@@ -1509,10 +1650,12 @@ document.addEventListener('DOMContentLoaded', function () {
               <li><strong>Thondamuthur Coconut Farms:</strong> Lush green countryside road lined with tall coconut palms.</li>
             </ul>
           </div>
+
           <div class="guide-section-box">
             <h3>🛣️ Road Conditions & Drive Profile</h3>
             <p>Smooth double-lane asphalt road via Thondamuthur and Semmedu. Zero hairpin bends or steep climbs. Perfect drive for senior citizens and families.</p>
           </div>
+
           <div class="guide-section-box">
             <h3>🛕 Popular Temples, Rivers & Waterfalls</h3>
             <ul style="margin-left:20px; line-height:1.8;">
@@ -1522,6 +1665,7 @@ document.addEventListener('DOMContentLoaded', function () {
               <li><strong>Kovai Kutralam Waterfalls:</strong> Pristine Siruvani river waterfall inside reserve forest.</li>
             </ul>
           </div>
+
           <div class="guide-section-box">
             <h3>⏱️ Timings & Operating Hours</h3>
             <ul style="margin-left:20px; line-height:1.8;">
@@ -1531,6 +1675,7 @@ document.addEventListener('DOMContentLoaded', function () {
               <li><strong>Kovai Kutralam Entry:</strong> 10:00 AM – 3:30 PM (Closed Mondays)</li>
             </ul>
           </div>
+
           <div class="guide-section-box">
             <h3>🍽️ Verified Highway Restaurants & Restrooms</h3>
             <div class="restroom-food-box">
@@ -1541,6 +1686,7 @@ document.addEventListener('DOMContentLoaded', function () {
               <li><strong>Saravana Bhavan (Perur Junction):</strong> Traditional South Indian tiffin.</li>
             </ul>
           </div>
+
           <div class="guide-section-box">
             <h3>💰 Complete Vehicle Tariff Breakdown</h3>
             <div class="price-table-wrap">
@@ -1572,6 +1718,7 @@ document.addEventListener('DOMContentLoaded', function () {
               </table>
             </div>
           </div>
+
           <div class="blog-cta-banner" style="margin-top:24px;">
             <h3>Book Isha & Adiyogi Taxi Package</h3>
             <a href="tel:9894020156" class="btn btn-yellow" style="padding:12px 24px;">📞 Call 9894020156</a>
@@ -1585,7 +1732,7 @@ document.addEventListener('DOMContentLoaded', function () {
       duration: '2 Days / 1 Night',
       distance: '140 KM to 220 KM',
       startingPrice: '₹4,500',
-      img: './public/assets/images/dest-wayanad.png',
+      img: './public/assets/images/dest-kerala.png',
       content: `
         <div class="tour-detail-container">
           <div class="tour-hero-header">
@@ -1593,12 +1740,14 @@ document.addEventListener('DOMContentLoaded', function () {
             <h1>Kerala Coastal Special (Chavakkad, Cherai, Kochi & Alleppey)</h1>
             <p style="color:#e2e8f0; font-size:1.05rem;">Golden beaches, Fort Kochi heritage, Chinese fishing nets, and Alleppey backwater houseboat cruises.</p>
           </div>
+
           <div class="tour-specs-strip">
             <div class="tour-spec-item"><span>Destinations</span><span>Chavakkad, Cherai, Kochi, Alleppey</span></div>
             <div class="tour-spec-item"><span>Drive Time</span><span>3.5 to 5 Hours</span></div>
             <div class="tour-spec-item"><span>Highway</span><span>NH 544 Express Highway</span></div>
             <div class="tour-spec-item"><span>Base Fare</span><span>₹4,500 Onwards</span></div>
           </div>
+
           <div class="guide-section-box">
             <h3>📍 On-The-Way Sightseeing Places</h3>
             <ul style="margin-left:20px; line-height:1.8;">
@@ -1608,10 +1757,12 @@ document.addEventListener('DOMContentLoaded', function () {
               <li><strong>Fort Kochi Chinese Fishing Nets:</strong> Historic 14th-century Chinese fishing cantilever structures at sunset.</li>
             </ul>
           </div>
+
           <div class="guide-section-box">
             <h3>🛣️ Road Conditions & Highway Profile</h3>
             <p>Pristine 4-lane NH 544 express highway via Walayar checkpost. Smooth flat road with zero hairpin curves. All Get Cabs vehicles carry valid Kerala State Tourist Taxi Entry Permits.</p>
           </div>
+
           <div class="guide-section-box">
             <h3>🛕 Popular Beaches, Rivers & Backwaters</h3>
             <ul style="margin-left:20px; line-height:1.8;">
@@ -1620,12 +1771,14 @@ document.addEventListener('DOMContentLoaded', function () {
               <li><strong>Vembanad Lake & Alleppey Backwaters:</strong> Traditional Kerala houseboat cruise through palm-fringed canals.</li>
             </ul>
           </div>
+
           <div class="guide-section-box">
             <h3>🍽️ Verified Highway Restaurants & Restrooms</h3>
             <div class="restroom-food-box">
               🧼 <strong>Hygienic Restrooms:</strong> Kuttanad Highway Plazas & Shell Fuel Stations offer clean washrooms.
             </div>
           </div>
+
           <div class="guide-section-box">
             <h3>💰 Complete Vehicle Tariff Breakdown</h3>
             <div class="price-table-wrap">
@@ -1661,6 +1814,7 @@ document.addEventListener('DOMContentLoaded', function () {
               </table>
             </div>
           </div>
+
           <div class="blog-cta-banner" style="margin-top:24px;">
             <h3>Book Kerala Coastal & Backwater Tour</h3>
             <a href="tel:9894020156" class="btn btn-yellow" style="padding:12px 24px;">📞 Call 9894020156</a>
@@ -1682,12 +1836,14 @@ document.addEventListener('DOMContentLoaded', function () {
             <h1>Guruvayur, Madurai & Trichy Grand Pilgrimage Tour</h1>
             <p style="color:#e2e8f0; font-size:1.05rem;">Visit Guruvayur Sree Krishna Temple, Madurai Meenakshi Amman Temple, and Trichy Srirangam Ranganathaswamy Temple.</p>
           </div>
+
           <div class="tour-specs-strip">
             <div class="tour-spec-item"><span>Destinations</span><span>Guruvayur, Madurai, Trichy</span></div>
             <div class="tour-spec-item"><span>Drive Time</span><span>3.5 to 4 Hours per Sector</span></div>
             <div class="tour-spec-item"><span>Highways</span><span>NH 44 & NH 83 Expressways</span></div>
             <div class="tour-spec-item"><span>Base Fare</span><span>₹3,800 Onwards</span></div>
           </div>
+
           <div class="guide-section-box">
             <h3>📍 Key Temple Shrines & Sightseeing</h3>
             <ul style="margin-left:20px; line-height:1.8;">
@@ -1696,10 +1852,12 @@ document.addEventListener('DOMContentLoaded', function () {
               <li><strong>Trichy Srirangam Ranganathaswamy Temple:</strong> Largest functioning Hindu temple complex in the world on Kaveri River island, plus Rockfort Ucchi Pillayar shrine.</li>
             </ul>
           </div>
+
           <div class="guide-section-box">
             <h3>🛣️ Highway Conditions & Drive Comfort</h3>
             <p>Direct 4-lane high-speed national expressways (NH 44 to Madurai and NH 83 to Trichy). Ultra-smooth flat roads ideal for family pilgrimages.</p>
           </div>
+
           <div class="guide-section-box">
             <h3>⏱️ Temple Darshan Timings</h3>
             <ul style="margin-left:20px; line-height:1.8;">
@@ -1708,12 +1866,14 @@ document.addEventListener('DOMContentLoaded', function () {
               <li><strong>Srirangam Temple:</strong> 6:00 AM – 1:00 PM & 3:30 PM – 9:00 PM</li>
             </ul>
           </div>
+
           <div class="guide-section-box">
             <h3>🍽️ Verified Highway Restaurants & Restrooms</h3>
             <div class="restroom-food-box">
               🧼 <strong>Hygienic Restrooms:</strong> Sree Annapoorna Highway Plazas & Murugan Idli Shop provide pristine washrooms.
             </div>
           </div>
+
           <div class="guide-section-box">
             <h3>💰 Complete Vehicle Tariff Breakdown</h3>
             <div class="price-table-wrap">
@@ -1749,6 +1909,7 @@ document.addEventListener('DOMContentLoaded', function () {
               </table>
             </div>
           </div>
+
           <div class="blog-cta-banner" style="margin-top:24px;">
             <h3>Book Pilgrimage Temple Tour</h3>
             <a href="tel:9894020156" class="btn btn-yellow" style="padding:12px 24px;">📞 Call 9894020156</a>
@@ -1762,7 +1923,7 @@ document.addEventListener('DOMContentLoaded', function () {
       duration: '2 Days / 1 Night',
       distance: '400 KM (6.5 Hours Drive)',
       startingPrice: '₹10,500',
-      img: './public/assets/images/dest-mysore.png',
+      img: './public/assets/images/dest-kanyakumari.png',
       content: `
         <div class="tour-detail-container">
           <div class="tour-hero-header">
@@ -1770,12 +1931,14 @@ document.addEventListener('DOMContentLoaded', function () {
             <h1>Kanyakumari Sunrise & Southern Coast Package</h1>
             <p style="color:#e2e8f0; font-size:1.05rem;">Experience Vivekananda Rock Memorial, 133ft Thiruvalluvar Statue, Kanyakumari Devi Temple, and Triveni Sangam sunrise.</p>
           </div>
+
           <div class="tour-specs-strip">
             <div class="tour-spec-item"><span>Total Distance</span><span>400 KM (One Way)</span></div>
             <div class="tour-spec-item"><span>Drive Time</span><span>6.5 Hours</span></div>
             <div class="tour-spec-item"><span>Highway</span><span>NH 44 North-South Corridor</span></div>
             <div class="tour-spec-item"><span>Base Fare</span><span>₹10,500 Onwards</span></div>
           </div>
+
           <div class="guide-section-box">
             <h3>📍 On-The-Way Sightseeing Places</h3>
             <ul style="margin-left:20px; line-height:1.8;">
@@ -1784,10 +1947,12 @@ document.addEventListener('DOMContentLoaded', function () {
               <li><strong>Suchindram Thanumalayan Temple:</strong> Famous 17th-century temple dedicated to the Trinity (Brahma, Vishnu, Shiva) with 18-ft Hanuman statue.</li>
             </ul>
           </div>
+
           <div class="guide-section-box">
             <h3>🛣️ Highway Conditions</h3>
             <p>Pristine NH 44 4-lane expressway direct from Coimbatore via Karur, Dindigul, Madurai, and Tirunelveli. Smooth high-speed driving.</p>
           </div>
+
           <div class="guide-section-box">
             <h3>⏱️ Timings & Highlights</h3>
             <ul style="margin-left:20px; line-height:1.8;">
@@ -1796,6 +1961,7 @@ document.addEventListener('DOMContentLoaded', function () {
               <li><strong>Kanyakumari Devi Temple:</strong> 4:30 AM – 12:30 PM & 4:00 PM – 8:30 PM</li>
             </ul>
           </div>
+
           <div class="guide-section-box">
             <h3>💰 Complete Vehicle Tariff Breakdown</h3>
             <div class="price-table-wrap">
@@ -1827,6 +1993,7 @@ document.addEventListener('DOMContentLoaded', function () {
               </table>
             </div>
           </div>
+
           <div class="blog-cta-banner" style="margin-top:24px;">
             <h3>Book Kanyakumari Tour Package</h3>
             <a href="tel:9894020156" class="btn btn-yellow" style="padding:12px 24px;">📞 Call 9894020156</a>
@@ -1848,12 +2015,14 @@ document.addEventListener('DOMContentLoaded', function () {
             <h1>Mudumalai, Masinagudi, Wayanad & Calicut Safari Package</h1>
             <p style="color:#e2e8f0; font-size:1.05rem;">Mudumalai Tiger Reserve jeep safaris, Banasura Sagar Dam, Thamarassery Churam 9 hairpin bends, and Calicut Beach.</p>
           </div>
+
           <div class="tour-specs-strip">
             <div class="tour-spec-item"><span>Destinations</span><span>Mudumalai, Masinagudi, Wayanad, Calicut</span></div>
             <div class="tour-spec-item"><span>Drive Time</span><span>3.5 to 5.5 Hours</span></div>
             <div class="tour-spec-item"><span>Night Ban</span><span>9:00 PM – 6:00 AM (Forest)</span></div>
             <div class="tour-spec-item"><span>Base Fare</span><span>₹4,200 Onwards</span></div>
           </div>
+
           <div class="guide-section-box">
             <h3>📍 On-The-Way Sightseeing Places</h3>
             <ul style="margin-left:20px; line-height:1.8;">
@@ -1862,12 +2031,14 @@ document.addEventListener('DOMContentLoaded', function () {
               <li><strong>Thamarassery Churam (Wayand-Calicut Ghat Pass):</strong> Iconic 9 hairpin bends mountain pass offering dramatic valley vistas down to Kozhikode coast.</li>
             </ul>
           </div>
+
           <div class="guide-section-box">
             <h3>🛣️ Forest Checkpost Rules & Curve Guidance</h3>
             <div class="road-bends-warning">
               ⚠️ <strong>Forest Checkpost Night Travel Ban:</strong> Mudumalai and Bandipur forest checkposts are closed between 9:00 PM and 6:00 AM for wildlife safety. Plan departure before 3:00 PM.
             </div>
           </div>
+
           <div class="guide-section-box">
             <h3>🛕 Key Highlights & Safaris</h3>
             <ul style="margin-left:20px; line-height:1.8;">
@@ -1877,12 +2048,14 @@ document.addEventListener('DOMContentLoaded', function () {
               <li><strong>Calicut Beach & Sweet Meat Street (SM Street):</strong> Kozhikode beach sunset, authentic Malabar Halwa, and Paragon restaurant dining.</li>
             </ul>
           </div>
+
           <div class="guide-section-box">
             <h3>🍽️ Verified Highway Restaurants & Restrooms</h3>
             <div class="restroom-food-box">
               🧼 <strong>Hygienic Restrooms:</strong> Coffee County Wayanad & Paragon Restaurant Calicut offer clean washrooms.
             </div>
           </div>
+
           <div class="guide-section-box">
             <h3>💰 Complete Vehicle Tariff Breakdown</h3>
             <div class="price-table-wrap">
@@ -1918,6 +2091,7 @@ document.addEventListener('DOMContentLoaded', function () {
               </table>
             </div>
           </div>
+
           <div class="blog-cta-banner" style="margin-top:24px;">
             <h3>Book Wildlife Safari & Beach Tour</h3>
             <a href="tel:9894020156" class="btn btn-yellow" style="padding:12px 24px;">📞 Call 9894020156</a>
