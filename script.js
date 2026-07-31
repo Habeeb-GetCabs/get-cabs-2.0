@@ -4,6 +4,8 @@
    Phone: 9894020156
    ========================================================================== */
 
+window.currentLocalDistanceKm = 0; // Global store for Google Maps API distance
+
 // Global SVG Image Placeholder & Error Handler
 window.getFallbackSvg = function(title) {
   const cleanTitle = title ? String(title).replace(/['"<>&]/g, '') : 'Get Cabs Coimbatore';
@@ -32,6 +34,11 @@ window.handleImgError = function(imgEl, title) {
 };
 
 document.addEventListener('DOMContentLoaded', function () {
+
+  // Automatically clear pre-filled admin phone numbers from HTML on load
+  document.querySelectorAll('input[type="tel"]').forEach(input => {
+    if (input.value === '9894020156') input.value = '';
+  });
 
   // 1. Mobile Menu Toggle & Close on Click
   const mobileToggle = document.querySelector('.mobile-toggle');
@@ -179,20 +186,20 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function updateAllEstimates() {
-    const localDistInputVal = document.getElementById('local-distance')?.value;
-    const localDist = localDistInputVal ? parseFloat(localDistInputVal) : 5;
+    // 1. Local Ride Engine with API Fallback
+    const localDistInput = document.getElementById('local-distance');
+    let localDist = localDistInput ? parseFloat(localDistInput.value) : window.currentLocalDistanceKm;
+    if (!localDist || isNaN(localDist) || localDist <= 0) localDist = 12; // Base fallback of 12 KM if API unverified
+    
     const localPickup = document.getElementById('local-pickup')?.value || '';
     const localDrop = document.getElementById('local-drop')?.value || '';
     const localFareEl = document.getElementById('local-fare-display');
     if (localFareEl) {
       if (localPickup && localDrop) {
         const localPrice = calculateLocalFare(localDist, localPickup, localDrop);
-        localFareEl.textContent = formatPriceRange(localPrice);
-      } else if (!localDist || localDist <= 0) {
-        localFareEl.textContent = '-';
+        localFareEl.textContent = formatPriceRange(localPrice) + (window.currentLocalDistanceKm > 0 ? '' : '*');
       } else {
-        const localPrice = calculateLocalFare(localDist, localPickup, localDrop);
-        localFareEl.textContent = formatPriceRange(localPrice);
+        localFareEl.textContent = '-';
       }
     }
 
@@ -294,7 +301,12 @@ document.addEventListener('DOMContentLoaded', function () {
         let date = formEl.querySelector('[data-field="date"]')?.value || 'Today';
         let time = formEl.querySelector('[data-field="time"]')?.value || 'Immediate';
         let phone = formEl.querySelector('[data-field="phone"]')?.value || '9894020156';
-        let fare = formEl.querySelector('.price-tag')?.textContent || '₹450';
+        
+        let fareDisplaySpan = formEl.querySelector('.price-tag') || formEl.querySelector('[id$="-fare-display"]');
+        let fare = fareDisplaySpan ? fareDisplaySpan.textContent : '₹450';
+        if (fare === '-' || fare.includes('Calculating')) {
+            fare = 'Standard Metered Fare based on final drop';
+        }
 
         if (modalDetails) {
           modalDetails.innerHTML = `
@@ -715,6 +727,8 @@ window.initPlacesAutocomplete = function() {
       return;
     }
 
+    localFareEl.textContent = 'Calculating...'; // Provide instant UI feedback
+
     const service = new google.maps.DistanceMatrixService();
     service.getDistanceMatrix({
       origins: [origin],
@@ -724,16 +738,14 @@ window.initPlacesAutocomplete = function() {
     }, (response, status) => {
       if (status === "OK" && response.rows[0].elements[0].status === "OK") {
         const distanceMeters = response.rows[0].elements[0].distance.value;
-        const distanceKm = distanceMeters / 1000;
-
-        // Calculate local fare using the exact existing pricing engine
-        if (typeof calculateLocalFare === 'function' && typeof formatPriceRange === 'function') {
-          const fare = calculateLocalFare(distanceKm, origin, destination);
-          localFareEl.textContent = formatPriceRange(fare);
-        }
+        window.currentLocalDistanceKm = distanceMeters / 1000;
       } else {
-        localFareEl.textContent = '-';
+        // Fallback safety if Google Maps API limits are hit or key is missing
+        window.currentLocalDistanceKm = 0; 
       }
+      
+      // Trigger price calculation update
+      if (typeof updateAllEstimates === 'function') updateAllEstimates();
     });
   }
 
