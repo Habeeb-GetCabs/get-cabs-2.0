@@ -247,6 +247,8 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
+  window.updateAllEstimates = updateAllEstimates; // Expose globally for Google Maps API
+
   const onewayDestSelect = document.getElementById('oneway-dest-select');
   const onewayDistInput = document.getElementById('oneway-distance');
   if (onewayDestSelect && onewayDistInput) {
@@ -711,7 +713,7 @@ window.initPlacesAutocomplete = function() {
     if (inputEl) {
       const ac = new google.maps.places.Autocomplete(inputEl, autocompleteOptions);
       ac.addListener('place_changed', function() {
-        if (typeof updateAllEstimates === 'function') updateAllEstimates();
+        if (typeof window.updateAllEstimates === 'function') window.updateAllEstimates();
       });
     }
   });
@@ -745,7 +747,7 @@ window.initPlacesAutocomplete = function() {
       }
       
       // Trigger price calculation update
-      if (typeof updateAllEstimates === 'function') updateAllEstimates();
+      if (typeof window.updateAllEstimates === 'function') window.updateAllEstimates();
     });
   }
 
