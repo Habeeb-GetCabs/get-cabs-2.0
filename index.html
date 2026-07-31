@@ -217,13 +217,9 @@
 
   <!-- Hero Section & Booking Form (BELOW THE HEADER) -->
   <section class="hero-booking-section" id="booking-form-section">
-    <!-- Background Travel Video Loop -->
+    <!-- Background Travel Image -->
     <div class="hero-bg-video-wrapper">
-      <canvas id="hero-canvas" class="hero-bg-canvas"></canvas>
-      <video class="hero-bg-video" id="hero-video" autoplay loop muted playsinline poster="./public/assets/images/dest-ooty.png" crossorigin="anonymous">
-        <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" type="video/mp4" />
-        <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WeAreGoingOnBullrun.mp4" type="video/mp4" />
-      </video>
+      <img src="./public/assets/images/header-bg.png" class="hero-bg-video" style="object-fit: cover; width: 100%; height: 100%; position: absolute; top: 0; left: 0;" alt="Get Cabs Coimbatore Highway" />
       <div class="hero-video-overlay"></div>
     </div>
 
@@ -667,13 +663,13 @@
       </div>
 
       <div class="comparison-card reveal delay-1">
-        <div class="comparison-table-wrapper">
-          <table class="comparison-table">
+        <div class="comparison-table-wrapper" style="margin: 0 auto; text-align: center;">
+          <table class="comparison-table" style="margin: 0 auto; text-align: center;">
             <thead>
               <tr>
-                <th class="col-feature">Service Feature</th>
-                <th class="col-getcabs">🚕 Get Cabs Coimbatore</th>
-                <th class="col-redtaxi">🚖 Red Taxi & Local App Cabs</th>
+                <th class="col-feature" style="text-align: center;">Service Feature</th>
+                <th class="col-getcabs" style="text-align: center;">🚕 Get Cabs Coimbatore</th>
+                <th class="col-redtaxi" style="text-align: center;">🚖 Red Taxi & Local App Cabs</th>
               </tr>
             </thead>
             <tbody>
@@ -933,7 +929,7 @@
         <!-- Package 4: Yercaud -->
         <div class="tour-package-card reveal delay-1" data-open-package="yercaud-hills">
           <div class="package-img-wrap">
-            <img src="./public/assets/images/dest-coonoor.png" alt="Yercaud Shevaroy Hills Tour" referrerpolicy="no-referrer" onerror="window.handleImgError(this, 'Yercaud Shevaroy Hills');" />
+            <img src="./public/assets/images/dest-yercaud.png" alt="Yercaud Shevaroy Hills Tour" referrerpolicy="no-referrer" onerror="window.handleImgError(this, 'Yercaud Shevaroy Hills');" />
             <span class="package-badge-category">Weekend Hill Gateway</span>
             <span class="package-duration-pill">⏱️ Full Day Tour</span>
           </div>
@@ -985,7 +981,7 @@
         <!-- Package 6: Kerala Coastal & Beach Special -->
         <div class="tour-package-card reveal delay-3" data-open-package="kerala-coastal">
           <div class="package-img-wrap">
-            <img src="./public/assets/images/dest-wayanad.png" alt="Kerala Cherai Alleppey Beach Tour" referrerpolicy="no-referrer" onerror="window.handleImgError(this, 'Kerala Beach & Backwaters');" />
+            <img src="./public/assets/images/dest-kerala.png" alt="Kerala Cherai Alleppey Beach Tour" referrerpolicy="no-referrer" onerror="window.handleImgError(this, 'Kerala Beach & Backwaters');" />
             <span class="package-badge-category">Beaches & Backwaters</span>
             <span class="package-duration-pill">⏱️ 2 Days / 1 Night</span>
           </div>
@@ -1037,7 +1033,7 @@
         <!-- Package 8: Kanyakumari Sunrise Tour -->
         <div class="tour-package-card reveal delay-2" data-open-package="kanyakumari-sunrise">
           <div class="package-img-wrap">
-            <img src="./public/assets/images/dest-mysore.png" alt="Kanyakumari Sunrise Cab Tour" referrerpolicy="no-referrer" onerror="window.handleImgError(this, 'Kanyakumari Sunrise Tour');" />
+            <img src="./public/assets/images/dest-kanyakumari.png" alt="Kanyakumari Sunrise Cab Tour" referrerpolicy="no-referrer" onerror="window.handleImgError(this, 'Kanyakumari Sunrise Tour');" />
             <span class="package-badge-category">Southern Coast Special</span>
             <span class="package-duration-pill">⏱️ 2 Days / 1 Night</span>
           </div>
@@ -1131,7 +1127,7 @@
         <article class="blog-card reveal delay-2" data-open-blog="airport-guide">
           <div class="blog-img-box">
             <img 
-              src="./public/assets/images/blog-tips.png" 
+              src="./public/assets/images/blog-airport-taxi.png" 
               alt="Coimbatore Airport Taxi Booking"
               referrerpolicy="no-referrer"
               onerror="window.handleImgError(this, 'Airport Taxi Guide');"
@@ -1159,7 +1155,7 @@
         <article class="blog-card reveal delay-3" data-open-blog="oneway-vs-round">
           <div class="blog-img-box">
             <img 
-              src="./public/assets/images/fleet-sedan.png" 
+              src="./public/assets/images/blog-oneway-hacks.png" 
               alt="Oneway Cabs vs Round Trip"
               referrerpolicy="no-referrer"
               onerror="window.handleImgError(this, 'Oneway Cabs Guide');"
@@ -1187,7 +1183,7 @@
         <article class="blog-card reveal delay-4" data-open-blog="hill-drives">
           <div class="blog-img-box">
             <img 
-              src="./public/assets/images/blog-valparai.png" 
+              src="./public/assets/images/blog-hill-drives.png" 
               alt="Scenic Hill Drives from Coimbatore"
               referrerpolicy="no-referrer"
               onerror="window.handleImgError(this, 'Valparai Hill Drives');"
@@ -1215,7 +1211,7 @@
         <article class="blog-card reveal delay-5" data-open-blog="red-taxi-comparison">
           <div class="blog-img-box">
             <img 
-              src="./public/assets/images/blog-munnar-kodai.png" 
+              src="./public/assets/images/blog-red-taxi-compare.png" 
               alt="Red Taxi vs Get Cabs Coimbatore Taxi Comparison"
               referrerpolicy="no-referrer"
               onerror="window.handleImgError(this, 'Red Taxi vs Get Cabs');"
