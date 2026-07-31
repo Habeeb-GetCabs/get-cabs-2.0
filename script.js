@@ -180,12 +180,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
   function updateAllEstimates() {
     const localDistInputVal = document.getElementById('local-distance')?.value;
-    const localDist = localDistInputVal ? parseFloat(localDistInputVal) : 0;
+    const localDist = localDistInputVal ? parseFloat(localDistInputVal) : 5;
     const localPickup = document.getElementById('local-pickup')?.value || '';
     const localDrop = document.getElementById('local-drop')?.value || '';
     const localFareEl = document.getElementById('local-fare-display');
     if (localFareEl) {
-      if (!localDist || localDist <= 0) {
+      if (localPickup && localDrop) {
+        const localPrice = calculateLocalFare(localDist, localPickup, localDrop);
+        localFareEl.textContent = formatPriceRange(localPrice);
+      } else if (!localDist || localDist <= 0) {
         localFareEl.textContent = '-';
       } else {
         const localPrice = calculateLocalFare(localDist, localPickup, localDrop);
@@ -251,7 +254,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   const calcInputs = [
-    'local-distance', 'local-cab-type',
+    'local-cab-type',
     'oneway-pickup', 'oneway-distance', 'oneway-dest-select', 'oneway-cab-type',
     'outstation-pickup', 'outstation-drop', 'outstation-distance', 'outstation-is-hills', 'outstation-cab-type',
     'hourly-pkg-select', 'hourly-cab-type'
@@ -668,16 +671,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
 }); // <--- End of DOMContentLoaded block
 
-// 14. Google Maps Places Autocomplete Engine (Globally Exposed)
+// 14. Google Maps Places Autocomplete & Distance Matrix Engine (Globally Exposed)
 window.initPlacesAutocomplete = function() {
-  const locationInputs = [
-    document.getElementById('local-pickup'),
-    document.getElementById('local-drop'),
-    document.getElementById('oneway-pickup'),
-    document.getElementById('outstation-pickup'),
-    document.getElementById('outstation-drop'),
-    document.querySelector('#form-hourly input[data-field="pickup"]')
-  ];
+  const localPickup = document.getElementById('local-pickup');
+  const localDrop = document.getElementById('local-drop');
+  const localFareEl = document.getElementById('local-fare-display');
 
   const autocompleteOptions = {
     componentRestrictions: { country: "in" },
@@ -685,18 +683,66 @@ window.initPlacesAutocomplete = function() {
     strictBounds: false
   };
 
-  locationInputs.forEach(inputEl => {
-    if (inputEl) {
-      const autocomplete = new google.maps.places.Autocomplete(inputEl, autocompleteOptions);
-      
-      autocomplete.addListener('place_changed', function() {
-        const place = autocomplete.getPlace();
-        if (!place.geometry) return;
+  // Setup Autocomplete for Local Pickup & Drop
+  if (localPickup) new google.maps.places.Autocomplete(localPickup, autocompleteOptions);
+  if (localDrop) new google.maps.places.Autocomplete(localDrop, autocompleteOptions);
 
-        if (typeof updateAllEstimates === 'function') {
-          updateAllEstimates();
-        }
+  // Other inputs autocomplete setup
+  const otherInputs = [
+    document.getElementById('oneway-pickup'),
+    document.getElementById('outstation-pickup'),
+    document.getElementById('outstation-drop'),
+    document.querySelector('#form-hourly input[data-field="pickup"]')
+  ];
+
+  otherInputs.forEach(inputEl => {
+    if (inputEl) {
+      const ac = new google.maps.places.Autocomplete(inputEl, autocompleteOptions);
+      ac.addListener('place_changed', function() {
+        if (typeof updateAllEstimates === 'function') updateAllEstimates();
       });
     }
   });
+
+  // Automatic Distance Matrix calculation when both Local Pickup and Drop are filled via Google Maps
+  function calculateGoogleDistance() {
+    if (!localPickup || !localDrop || !localFareEl) return;
+    const origin = localPickup.value.trim();
+    const destination = localDrop.value.trim();
+
+    if (origin.length < 3 || destination.length < 3) {
+      localFareEl.textContent = '-';
+      return;
+    }
+
+    const service = new google.maps.DistanceMatrixService();
+    service.getDistanceMatrix({
+      origins: [origin],
+      destinations: [destination],
+      travelMode: google.maps.TravelMode.DRIVING,
+      unitSystem: google.maps.UnitSystem.METRIC,
+    }, (response, status) => {
+      if (status === "OK" && response.rows[0].elements[0].status === "OK") {
+        const distanceMeters = response.rows[0].elements[0].distance.value;
+        const distanceKm = distanceMeters / 1000;
+
+        // Calculate local fare using the exact existing pricing engine
+        if (typeof calculateLocalFare === 'function' && typeof formatPriceRange === 'function') {
+          const fare = calculateLocalFare(distanceKm, origin, destination);
+          localFareEl.textContent = formatPriceRange(fare);
+        }
+      } else {
+        localFareEl.textContent = '-';
+      }
+    });
+  }
+
+  if (localPickup) {
+    localPickup.addEventListener('change', calculateGoogleDistance);
+    localPickup.addEventListener('blur', calculateGoogleDistance);
+  }
+  if (localDrop) {
+    localDrop.addEventListener('change', calculateGoogleDistance);
+    localDrop.addEventListener('blur', calculateGoogleDistance);
+  }
 };
