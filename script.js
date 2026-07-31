@@ -326,6 +326,13 @@ document.addEventListener('DOMContentLoaded', function () {
           `;
         }
 
+        // Setup WhatsApp URL for the Close button
+        if (modalCloseBtn) {
+          const waMessage = `*New Get Cabs Booking!*%0A%0A*Type:* ${item.type}%0A*Pickup:* ${pickup}%0A*Drop:* ${drop}%0A*Date & Time:* ${date} at ${time}%0A*Customer Phone:* ${phone}%0A*Estimated Fare:* ${fare}`;
+          modalCloseBtn.setAttribute('data-wa-url', `https://wa.me/919894020156?text=${waMessage}`);
+          modalCloseBtn.textContent = 'Confirm & Send via WhatsApp'; // Update button text for better UX
+        }
+
         if (modalOverlay) {
           modalOverlay.classList.add('active');
         }
@@ -334,7 +341,11 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 
   if (modalCloseBtn && modalOverlay) {
-    modalCloseBtn.addEventListener('click', () => modalOverlay.classList.remove('active'));
+    modalCloseBtn.addEventListener('click', () => {
+      const waUrl = modalCloseBtn.getAttribute('data-wa-url');
+      if (waUrl) window.open(waUrl, '_blank');
+      modalOverlay.classList.remove('active');
+    });
     modalOverlay.addEventListener('click', (e) => {
       if (e.target === modalOverlay) modalOverlay.classList.remove('active');
     });
