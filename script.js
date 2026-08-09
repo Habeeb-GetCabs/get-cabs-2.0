@@ -190,34 +190,54 @@ document.addEventListener('DOMContentLoaded', function () {
     return hrs * 350;
   }
 
+  function estimateLocalDistance(pickup = '', drop = '') {
+    const p = String(pickup).toLowerCase().trim();
+    const d = String(drop).toLowerCase().trim();
+    if (!p || !d) return 0;
+    
+    // Specific location pair distances in Kovai (in KM)
+    if ((p.includes('airport') && d.includes('railway')) || (p.includes('railway') && d.includes('airport'))) return 11;
+    if ((p.includes('airport') && d.includes('gandhipuram')) || (p.includes('gandhipuram') && d.includes('airport'))) return 10;
+    if ((p.includes('airport') && d.includes('rs puram')) || (p.includes('rs puram') && d.includes('airport'))) return 13;
+    if ((p.includes('airport') && d.includes('saravanampatti')) || (p.includes('saravanampatti') && d.includes('airport'))) return 12;
+    if ((p.includes('airport') && d.includes('peelamedu')) || (p.includes('peelamedu') && d.includes('airport'))) return 5;
+    if ((p.includes('gandhipuram') && d.includes('rs puram')) || (p.includes('rs puram') && d.includes('gandhipuram'))) return 4;
+    if ((p.includes('gandhipuram') && d.includes('peelamedu')) || (p.includes('peelamedu') && d.includes('gandhipuram'))) return 6;
+    if ((p.includes('gandhipuram') && d.includes('saravanampatti')) || (p.includes('saravanampatti') && d.includes('gandhipuram'))) return 9;
+    if ((p.includes('gandhipuram') && d.includes('ukkadam')) || (p.includes('ukkadam') && d.includes('gandhipuram'))) return 4;
+    if ((p.includes('gandhipuram') && d.includes('singanallur')) || (p.includes('singanallur') && d.includes('gandhipuram'))) return 8;
+    if ((p.includes('isha') || p.includes('adiyogi')) || (d.includes('isha') || d.includes('adiyogi'))) return 33;
+    if (p.includes('marudhamalai') || d.includes('marudhamalai')) return 15;
+    if (p.includes('mettupalayam') || d.includes('mettupalayam')) return 37;
+    
+    // Default estimate when both pickup and dropoff are entered
+    return 8;
+  }
+
   // Update all estimate displays in the booking tabs
   function updateAllEstimates() {
     // 1. Local Ride
-    const localDistInputVal = document.getElementById('local-distance')?.value;
-    const localDist = localDistInputVal ? parseFloat(localDistInputVal) : 0;
     const localPickup = document.getElementById('local-pickup')?.value || '';
     const localDrop = document.getElementById('local-drop')?.value || '';
     const localFareEl = document.getElementById('local-fare-display');
     if (localFareEl) {
-      if (!localDist || localDist <= 0) {
-        localFareEl.textContent = '-';
+      if (!localPickup.trim() || !localDrop.trim()) {
+        localFareEl.textContent = '₹150 (Base Fare)';
       } else {
+        const localDist = estimateLocalDistance(localPickup, localDrop);
         const localPrice = calculateLocalFare(localDist, localPickup, localDrop);
         localFareEl.textContent = formatPriceRange(localPrice);
       }
     }
 
     // 2. Oneway Ride
-    const onewayDistInputVal = document.getElementById('oneway-distance')?.value;
     const onewayPickup = document.getElementById('oneway-pickup')?.value || 'Coimbatore';
-    const onewayDrop = document.getElementById('oneway-dest-select')?.value || 'Ooty Bus Stand';
+    const onewayDestSelect = document.getElementById('oneway-dest-select');
+    const onewayDrop = onewayDestSelect?.value || 'Ooty Bus Stand';
     const onewayFareEl = document.getElementById('oneway-fare-display');
     if (onewayFareEl) {
-      let onewayDist = onewayDistInputVal ? parseFloat(onewayDistInputVal) : 0;
-      if (!onewayDist) {
-        const selectedOpt = onewayDestSelect?.options?.[onewayDestSelect.selectedIndex];
-        onewayDist = parseFloat(selectedOpt?.getAttribute('data-km') || 85);
-      }
+      const selectedOpt = onewayDestSelect?.options?.[onewayDestSelect.selectedIndex];
+      const onewayDist = parseFloat(selectedOpt?.getAttribute('data-km') || 85);
       const onewayPrice = calculateOnewayFare(onewayDist, onewayDrop, onewayPickup);
       onewayFareEl.textContent = formatPriceRange(onewayPrice);
     }
@@ -234,11 +254,7 @@ document.addEventListener('DOMContentLoaded', function () {
       isOutstationHills = true;
     }
 
-    let outstationDist = parseFloat(document.getElementById('outstation-distance')?.value);
-    if (isNaN(outstationDist) || outstationDist < 50) {
-      outstationDist = isOutstationHills ? 300 : 250;
-    }
-
+    let outstationDist = isOutstationHills ? 300 : 250;
     const outstationFareEl = document.getElementById('outstation-fare-display');
     if (outstationFareEl) {
       const outstationPrice = calculateOutstationFare(outstationDist, isOutstationHills);
@@ -254,25 +270,11 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
-  // Auto-sync distance when user selects a preset destination in Oneway
-  const onewayDestSelect = document.getElementById('oneway-dest-select');
-  const onewayDistInput = document.getElementById('oneway-distance');
-  if (onewayDestSelect && onewayDistInput) {
-    onewayDestSelect.addEventListener('change', function () {
-      const selectedOpt = this.options[this.selectedIndex];
-      const km = selectedOpt.getAttribute('data-km');
-      if (km) {
-        onewayDistInput.value = km;
-      }
-      updateAllEstimates();
-    });
-  }
-
   // Attach dynamic input event listeners for live price updates & auto hill detection
   const calcInputs = [
-    'local-distance', 'local-cab-type',
-    'oneway-pickup', 'oneway-distance', 'oneway-dest-select', 'oneway-cab-type',
-    'outstation-pickup', 'outstation-drop', 'outstation-distance', 'outstation-is-hills', 'outstation-cab-type',
+    'local-pickup', 'local-drop', 'local-cab-type',
+    'oneway-pickup', 'oneway-dest-select', 'oneway-cab-type',
+    'outstation-pickup', 'outstation-drop', 'outstation-is-hills', 'outstation-cab-type',
     'hourly-pkg-select', 'hourly-cab-type'
   ];
 
@@ -327,6 +329,22 @@ document.addEventListener('DOMContentLoaded', function () {
               ✓ Get Cabs booking confirmation SMS & driver details will be sent to ${phone}. Or call us directly at <strong>9894020156</strong>.
             </p>
           `;
+
+          // Dynamic WhatsApp link with formatted booking message
+          const waMsg = encodeURIComponent(
+            `*🚕 GET CABS COIMBATORE - BOOKING REQUEST*\n\n` +
+            `• *Booking Type:* ${item.type}\n` +
+            `• *Pickup:* ${pickup}\n` +
+            `• *Drop:* ${drop}\n` +
+            `• *Date & Time:* ${date} ${time !== 'Immediate' ? 'at ' + time : ''}\n` +
+            `• *Phone:* ${phone}\n` +
+            `• *Estimated Fare:* ${fare}\n\n` +
+            `Please confirm my cab booking and driver details.`
+          );
+          const waBtn = document.getElementById('modal-whatsapp-btn');
+          if (waBtn) {
+            waBtn.href = `https://wa.me/919894020156?text=${waMsg}`;
+          }
         }
 
         if (modalOverlay) {
