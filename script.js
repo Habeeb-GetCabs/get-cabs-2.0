@@ -518,7 +518,7 @@ document.addEventListener('DOMContentLoaded', function () {
       category: 'Ooty Hill Guide',
       date: 'July 2026',
       readTime: '5 min read',
-      img: './assets/images/blog-ooty.png',
+      img: './public/assets/images/blog-ooty.png',
       content: `
         <div class="blog-full-article">
           <div class="blog-hero-header">
@@ -529,7 +529,7 @@ document.addEventListener('DOMContentLoaded', function () {
             </div>
           </div>
 
-          <img src="./assets/images/blog-ooty.png" alt="Coimbatore to Ooty Cab Travel" class="blog-featured-img" onerror="this.onerror=null; this.src='./assets/images/dest-ooty.png';" />
+          <img src="./public/assets/images/blog-ooty.png" alt="Coimbatore to Ooty Cab Travel" class="blog-featured-img" onerror="this.onerror=null; this.src='./public/assets/images/dest-ooty.png';" />
 
           <p>Ooty, known as the <em>Queen of Hill Stations</em>, is located just 85 KM from Coimbatore city. Traveling by cab from Coimbatore to Ooty gives you the flexibility to enjoy breathtaking viewpoints along the Mettupalayam and Coonoor ghat road with 36 hairpin curves.</p>
 
@@ -568,7 +568,7 @@ document.addEventListener('DOMContentLoaded', function () {
       category: 'Airport Taxi',
       date: 'July 2026',
       readTime: '4 min read',
-      img: './assets/images/blog-tips.png',
+      img: './public/assets/images/blog-tips.png',
       content: `
         <div class="blog-full-article">
           <div class="blog-hero-header">
@@ -579,7 +579,7 @@ document.addEventListener('DOMContentLoaded', function () {
             </div>
           </div>
 
-          <img src="./assets/images/blog-tips.png" alt="Coimbatore Airport Taxi Service" class="blog-featured-img" onerror="this.onerror=null; this.src='./assets/images/dest-ooty.png';" />
+          <img src="./public/assets/images/blog-tips.png" alt="Coimbatore Airport Taxi Service" class="blog-featured-img" onerror="this.onerror=null; this.src='./public/assets/images/dest-ooty.png';" />
 
           <p>Coimbatore International Airport (CJB) located in Peelamedu connects thousands of business and leisure travelers daily. Getting a reliable taxi with zero surge pricing is crucial for early morning or late night flights.</p>
 
@@ -603,7 +603,7 @@ document.addEventListener('DOMContentLoaded', function () {
       category: 'Fare Hacks',
       date: 'July 2026',
       readTime: '6 min read',
-      img: './assets/images/fleet-sedan.png',
+      img: './public/assets/images/fleet-sedan.png',
       content: `
         <div class="blog-full-article">
           <div class="blog-hero-header">
@@ -614,7 +614,7 @@ document.addEventListener('DOMContentLoaded', function () {
             </div>
           </div>
 
-          <img src="./assets/images/fleet-sedan.png" alt="Oneway Cabs Coimbatore" class="blog-featured-img" onerror="this.onerror=null; this.src='./assets/images/dest-ooty.png';" />
+          <img src="./public/assets/images/fleet-sedan.png" alt="Oneway Cabs Coimbatore" class="blog-featured-img" onerror="this.onerror=null; this.src='./public/assets/images/dest-ooty.png';" />
 
           <p>Traditional outstation taxis charge return kilometer fares regardless of whether you need the cab for the journey back. Get Cabs Oneway Intercity Service eliminates return charges completely!</p>
 
@@ -635,7 +635,7 @@ document.addEventListener('DOMContentLoaded', function () {
       category: 'Outstation Tours',
       date: 'July 2026',
       readTime: '5 min read',
-      img: './assets/images/blog-valparai.png',
+      img: './public/assets/images/blog-valparai.png',
       content: `
         <div class="blog-full-article">
           <div class="blog-hero-header">
@@ -646,7 +646,7 @@ document.addEventListener('DOMContentLoaded', function () {
             </div>
           </div>
 
-          <img src="./assets/images/blog-valparai.png" alt="Hill Drives Outstation Cabs" class="blog-featured-img" onerror="this.onerror=null; this.src='./assets/images/dest-ooty.png';" />
+          <img src="./public/assets/images/blog-valparai.png" alt="Hill Drives Outstation Cabs" class="blog-featured-img" onerror="this.onerror=null; this.src='./public/assets/images/dest-ooty.png';" />
 
           <p>Coimbatore is surrounded by Western Ghats mountain destinations. Hiring an experienced hill station driver ensures comfort, safety, and smooth navigation through foggy hairpin bends.</p>
 
@@ -1006,7 +1006,7 @@ document.addEventListener('DOMContentLoaded', function () {
       duration: 'Full Day / 2 Days',
       distance: '85 KM to Ooty (3 Hours Drive)',
       startingPrice: '₹2,380',
-      img: './assets/images/dest-ooty.png',
+      img: './public/assets/images/dest-ooty.png',
       content: `
         <div class="tour-detail-container">
           <div class="tour-hero-header">
@@ -1137,7 +1137,7 @@ document.addEventListener('DOMContentLoaded', function () {
       duration: '2 Days / 1 Night',
       distance: '160 KM (4.5 Hours Drive)',
       startingPrice: '₹3,800',
-      img: './assets/images/dest-munnar.png',
+      img: './public/assets/images/dest-munnar.png',
       content: `
         <div class="tour-detail-container">
           <div class="tour-hero-header">
@@ -1259,7 +1259,7 @@ document.addEventListener('DOMContentLoaded', function () {
       duration: 'Full Day / 2 Days',
       distance: '175 KM (4.5 Hours Drive)',
       startingPrice: '₹4,200',
-      img: './assets/images/dest-kodaikanal.png',
+      img: './public/assets/images/dest-kodaikanal.png',
       content: `
         <div class="tour-detail-container">
           <div class="tour-hero-header">
@@ -1373,7 +1373,7 @@ document.addEventListener('DOMContentLoaded', function () {
       duration: 'Full Day Tour',
       distance: '195 KM (4 Hours Drive)',
       startingPrice: '₹4,800',
-      img: './assets/images/dest-coonoor.png',
+      img: './public/assets/images/dest-coonoor.png',
       content: `
         <div class="tour-detail-container">
           <div class="tour-hero-header">
@@ -1476,7 +1476,7 @@ document.addEventListener('DOMContentLoaded', function () {
       duration: 'Half Day / Full Day',
       distance: '30 KM from City (45 Mins)',
       startingPrice: '₹1,200',
-      img: './assets/images/dest-adiyogi.png',
+      img: './public/assets/images/dest-adiyogi.png',
       content: `
         <div class="tour-detail-container">
           <div class="tour-hero-header">
@@ -1583,7 +1583,7 @@ document.addEventListener('DOMContentLoaded', function () {
       duration: '2 Days / 1 Night',
       distance: '140 KM to 220 KM',
       startingPrice: '₹4,500',
-      img: './assets/images/dest-wayanad.png',
+      img: './public/assets/images/dest-wayanad.png',
       content: `
         <div class="tour-detail-container">
           <div class="tour-hero-header">
@@ -1679,7 +1679,7 @@ document.addEventListener('DOMContentLoaded', function () {
       duration: '2 Days / 1 Night',
       distance: '140 KM to 215 KM',
       startingPrice: '₹3,800',
-      img: './assets/images/dest-madurai.png',
+      img: './public/assets/images/dest-madurai.png',
       content: `
         <div class="tour-detail-container">
           <div class="tour-hero-header">
@@ -1774,7 +1774,7 @@ document.addEventListener('DOMContentLoaded', function () {
       duration: '2 Days / 1 Night',
       distance: '400 KM (6.5 Hours Drive)',
       startingPrice: '₹10,500',
-      img: './assets/images/dest-mysore.png',
+      img: './public/assets/images/dest-mysore.png',
       content: `
         <div class="tour-detail-container">
           <div class="tour-hero-header">
@@ -1858,7 +1858,7 @@ document.addEventListener('DOMContentLoaded', function () {
       duration: '2 Days / 1 Night',
       distance: '115 KM to 200 KM',
       startingPrice: '₹4,200',
-      img: './assets/images/dest-valparai.png',
+      img: './public/assets/images/dest-valparai.png',
       content: `
         <div class="tour-detail-container">
           <div class="tour-hero-header">
