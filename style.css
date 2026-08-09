@@ -1,6 +1,6 @@
 /* ==========================================================================
    GET CABS - Coimbatore Cab Booking (Pure CSS)
-   Inspired by Red Taxi & Coimbatore Local Taxi Services
+   Coimbatore Premier Local Taxi Services
    Company Name: Get Cabs
    Phone: 9894020156
    ========================================================================== */
@@ -2491,7 +2491,7 @@ body {
   background: #f8fafc;
 }
 
-/* Red Taxi Comparison Section */
+/* Taxi Comparison Section */
 .comparison-section {
   padding: 60px 0;
   background: #ffffff;
@@ -2548,7 +2548,7 @@ body {
   font-size: 1.05rem;
 }
 
-.comparison-table th.col-redtaxi {
+.comparison-table th.col-appcabs {
   width: 35%;
   background: #64748b;
   color: #ffffff;
