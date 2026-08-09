@@ -51,7 +51,7 @@ Your goal is to answer any question about taxi bookings, transparent fares, hill
 
 Key Get Cabs Facts:
 - Hotline: 9894020156
-- Zero Peak Surge Pricing (Unlike Red Taxi, Ola, Uber)
+- Zero Peak Surge Pricing
 - Fixed Airport Drops from ₹250
 - True Oneway Outstation Rates (Save 40%)
 - 5-10 Min Pickup Guarantee across Coimbatore
@@ -137,12 +137,12 @@ Response Formatting Rules:
             <li><strong>No Flight Delay Penalties:</strong> Free driver waiting up to 30 mins for delayed flights.</li>
           </ul>
           <p>📞 Need an immediate pickup? Call <a href="tel:9894020156" style="color:#d90429; font-weight:800;">9894020156</a> now.</p>`;
-      } else if (q.includes("red taxi") || q.includes("compare") || q.includes("ola") || q.includes("uber") || q.includes("difference")) {
-        responseText = `<p>⚔️ <strong>Why Choose Get Cabs Over Red Taxi in Coimbatore:</strong></p>
+      } else if (q.includes("compare") || q.includes("difference") || q.includes("why choose") || q.includes("rates")) {
+        responseText = `<p>⭐ <strong>Why Choose Get Cabs in Coimbatore:</strong></p>
           <ul>
-            <li><strong>Zero Peak Surge:</strong> Red Taxi charges 1.2x - 1.8x dynamic surge during rain and peak hours. Get Cabs rate is ALWAYS 100% flat and transparent.</li>
+            <li><strong>Zero Peak Surge:</strong> Standard app cabs charge 1.2x - 1.8x dynamic surge during rain and peak hours. Get Cabs rate is ALWAYS 100% flat and transparent.</li>
             <li><strong>No Signal Wait Fee:</strong> You pay for net travel KM, not waiting in traffic.</li>
-            <li><strong>Direct Phone & Web Booking:</strong> No app crash or network required. Call <strong>9894020156</strong> for instant dispatch.</li>
+            <li><strong>Direct Phone & Web Booking:</strong> No app crash or complex installation required. Call <strong>9894020156</strong> for instant dispatch.</li>
             <li><strong>True Oneway Outstation Billing:</strong> Save up to 40% on round-trip minimums.</li>
           </ul>`;
       } else if (q.includes("adiyogi") || q.includes("isha") || q.includes("vellingiri")) {
@@ -183,8 +183,20 @@ Response Formatting Rules:
     res.json({ status: "ok", app: "Get Cabs Coimbatore AI" });
   });
 
-  // Serve static asset folders directly
+  // Serve static assets directly before Vite middleware
+  app.get("/style.css", (_req, res) => {
+    res.setHeader("Content-Type", "text/css");
+    res.sendFile(path.join(process.cwd(), "style.css"));
+  });
+  app.get("/script.js", (_req, res) => {
+    res.setHeader("Content-Type", "application/javascript");
+    res.sendFile(path.join(process.cwd(), "script.js"));
+  });
+  app.use("/public", express.static(path.join(process.cwd(), "public")));
+  app.use("/public/assets", express.static(path.join(process.cwd(), "public/assets")));
+  app.use("/src/assets", express.static(path.join(process.cwd(), "public/assets")));
   app.use("/src/assets", express.static(path.join(process.cwd(), "src/assets")));
+  app.use("/assets", express.static(path.join(process.cwd(), "public/assets")));
   app.use("/assets", express.static(path.join(process.cwd(), "src/assets")));
   app.use(express.static(path.join(process.cwd(), "public")));
 
