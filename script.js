@@ -222,7 +222,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const localFareEl = document.getElementById('local-fare-display');
     if (localFareEl) {
       if (!localPickup.trim() || !localDrop.trim()) {
-        localFareEl.textContent = '₹150 (Base Fare)';
+        localFareEl.textContent = '-';
       } else {
         const localDist = estimateLocalDistance(localPickup, localDrop);
         const localPrice = calculateLocalFare(localDist, localPickup, localDrop);
